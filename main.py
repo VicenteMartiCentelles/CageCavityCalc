@@ -10,6 +10,8 @@ from multiprocess import Pool
 import rdkit.Chem.AllChem as rdkit
 from rdkit.Geometry import Point3D
 
+from hydrophobicity_values import hydrophValues
+
 # there are a lot of warning, since not everythin is specify in pdb, let's ignore them
 import warnings
 warnings.filterwarnings("ignore")
