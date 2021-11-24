@@ -201,7 +201,7 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
         dist1 = np.linalg.norm(np.array(pore_center_of_mass) - np.array(i.pos))
         if dist1 > 0:
             vect1Norm = (np.array(pore_center_of_mass) - np.array(i.pos)) / dist1
-        if dist1 < pore_radius:
+        if (dist1 < pore_radius and pore_radius > 10):
             i.inside_cavity = 1
             inside_cavity_grid.append(a)
         if i.inside_cavity == 0:
@@ -332,6 +332,9 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
     """
 
     # Create an empty editable molecule
+    if (number_of_dummies == 0):
+        number_of_dummies = len(calculatedGird.grid)
+
     dummy_universe = MDAnalysis.Universe.empty(number_of_dummies, n_residues=number_of_dummies,
                                                atom_resindex=[0] * number_of_dummies,
                                                residue_segindex=[0] * number_of_dummies, trajectory=True)
@@ -340,10 +343,11 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
     dummy_universe.atoms.positions = number_of_dummies * np.array([0,0,0])
     dummy_universe.add_TopologyAttr('name', ['D'] * number_of_dummies)
     dummy_universe.add_TopologyAttr('resname', ['D'] * number_of_dummies)
-
+        
     dummies_inside = []
 
     for i, dummy_atom in enumerate(calculatedGird.grid[inside_cavity_grid]):
+        if (dummy_atom.inside_cavity == 1 and dummy_atom.overlapping_with_cage == 0):
             if calculate_windows == True:
                 distWindow = overlappingCalculatedGirdContactsKDTree.query(dummy_atom.pos, k=None, p=2,
                                                                            distance_upper_bound=1.1 * grid_spacing)
@@ -357,12 +361,13 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
                         # print("dummy atom not in a window")
 
             # Remove isolated dummy atoms with a distance < 1.1*grid_spacing
-            if (
-            (dummy_atom.number_of_neighbors > 1 and dummy_atom.number_of_neighbors < 7 and save_only_surface == True)):
+            #if (dummy_atom.number_of_neighbors > 0):
+            if (dummy_atom.number_of_neighbors > 1 and dummy_atom.number_of_neighbors < 7 and save_only_surface == True):
                 if calculate_bfactor == True:
                     contacts = []
                     for atom_type in atom_type_list:
-                        if atom_type != "H":
+                        if atom_type == "c":
+                        #if atom_type != "h":
                             dist = KDTree_dict[atom_type].query(dummy_atom.pos, k=None, p=2,
                                                                 distance_upper_bound=distThreshold_atom_contacts)
 
@@ -370,7 +375,8 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
                                 for k in range(0, len(dist[0])):
                                     if compute_atom_contacts == True:
                                         # print("compute_atom_contacts")
-                                        contacts.append(1 / dist[0][k])
+                                        contacts.append(1)
+                                        #contacts.append(1 / dist[0][k])
                                     '''
                                     elif compute_aromatic_contacts == True:
                                         isAromatic = rdkit_cage.GetAtomWithIdx(
@@ -379,11 +385,14 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
                                         if isAromatic == True:
                                             contacts.append(1 / dist[0][k])
                                     '''
+
                 dummy_universe.atoms[i].position = (dummy_atom.x, dummy_atom.y, dummy_atom.z)
+                    
                 dummies_inside.append(i)
                 if calculate_bfactor == True:
-                    if dummy_atom.is_window == 1:
-                        dummy_universe.atoms[i].tempfactor = 1.0
+                    dummy_universe.atoms[i].tempfactor = sum(contacts)
+                    #if dummy_atom.is_window == 1:
+                    #    dummy_universe.atoms[i].tempfactor = 1.0
 
     #print("Saving PDB file with the dummy cavity atoms")
     #rdkit.MolToPDBFile(rdkit_molRW, cagePDBout1)
@@ -412,7 +421,7 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
 
     if len(dummies_inside) > 0:
         cageCavityVolume = cavity_volume(dummy_universe.atoms[dummies_inside].positions, vdwRdummy)
-        print("Cage cavity volume = ", cageCavityVolume, " A3")
+        #print("Cage cavity volume = ", cageCavityVolume, " A3")
         return(cageCavityVolume)
     else:
         print("Cavity with no volume")
@@ -479,7 +488,7 @@ def get_args():
 
     # Outputs:
     parser.add_argument("-o", default=None, help="Output coordination file, only pdb supported (due to beta factor)")
-    parser.add_argument("-oc", default='cavity.dat', help="Volumes")
+    parser.add_argument("-oc", default=None, help="Volumes")
 
     # Trajectory control:
     parser.add_argument("-n_threads", default=4, help="number of threads for the trajectory calculations")
@@ -496,7 +505,10 @@ def get_args():
     parser.add_argument("-compute_atom_contacts", default=True, help="")
     parser.add_argument("-distThreshold_atom_contacts", default=5.0, help="")
     parser.add_argument("-number_of_dummies", default=500, help="is used for trajectory which requirers constant number of atoms, excess of dummies is put in the center of the cage")
-    parser.add_argument("-pymol", default=False, help="open pymol afterwards")
+    parser.add_argument("-pymol", default="False", help="open pymol afterwards")
+    parser.add_argument("-bcolor", default="False", help="b-factor surface color in pymol")
+    parser.add_argument("-bcolor_min", default="None", help="b-factor min value for surface color scale in pymol")
+    parser.add_argument("-bcolor_max", default="None", help="b-factor man value for surface color scale in pymol")
 
 
     return parser.parse_args()
@@ -561,21 +573,61 @@ if __name__ == '__main__':
 
         #pd.DataFrame(results).to_csv("cavity.csv")
     else:
-        cageCavityVolume = cavity(0, MDAnalysis.Universe(args.f), output = args.o)
+        if args.o is None:
+            filePDBout = args.f.replace(".pdb", "_cavity.pdb")
+        else:
+            filePDBout = args.o
+            
+        if args.oc is None:
+            fileTXTout = args.f.replace(".pdb", "_cavity.txt")
+        else:
+            fileTXTout = args.oc
+        
+        cageCavityVolume = cavity(0, MDAnalysis.Universe(args.f), output = filePDBout,
+                                grid_spacing=float(args.grid_spacing),
+                                distance_threshold_for_90_deg_angle=float(args.distance_threshold_for_90_deg_angle),
+                                distThreshold_atom_contacts=float(args.distThreshold_atom_contacts),
+                                number_of_dummies=int(args.number_of_dummies))
         print("Cage cavity volume = ", cageCavityVolume, " A3")
+        
+        file1 = open(fileTXTout, "w+")
+        file1.write("Cage cavity volume = " + "{:.2f}".format(cageCavityVolume) + " A3\n")
+        file1.close()
 
-    if args.pymol==True:
+    
+    if args.pymol.lower() == "true":
         import pymol
         pymol.pymol_argv = ['pymol', '-q']
         pymol.finish_launching()
         cmd = pymol.cmd
-        cmd.load(args.o)
+        cmd.load(filePDBout, "cage")
         cmd.set('valence', 0)
-        cmd.show("surface", selection="elem D")
+        #cmd.set_name(args.o.replace(".pdb", ""), "cage")
+        
+        cmd.create("cavity", selection="elem D", extract=True)
+        cmd.show_as("surface", selection="cavity")
+        if args.bcolor.lower() == "true":
+            if (args.bcolor_min.lower() != "none" and args.bcolor_max.lower() != "none"):
+                cmd.spectrum("b", selection="cavity")
+            else:
+                cmd.spectrum("b", minimum=float(args.bcolor_min), maximum=float(args.bcolor_max), selection="cavity")
+                # def spectrum(expression="count", palette="rainbow",selection="(all)", minimum=None, maximum=None, byres=0, quiet=1):
+        else:
+            cmd.set("surface_color", "cyan", selection="cavity")
+            cmd.set("transparency", 0.5, selection="cavity")
+        
+        cmd.show("surface", selection="cage")
+        cmd.set("surface_color", "green", selection="cage") 
+        cmd.set("transparency", 0.7, selection="cage")
+        cmd.hide("surface", selection="cage")
+        
         cmd.clip("atoms", 5, "All")
-        # def spectrum(expression="count", palette="rainbow",selection="(all)", minimum=None, maximum=None, byres=0, quiet=1):
-        cmd.spectrum("b", selection="elem D")
+        
+        cmd.orient("cage")
+        cmd.zoom("cage")
+   
+        
         #cmd.load(cagePDBout2)
         #cmd.show("spheres", selection=cagePDBout2.replace(".pdb", ""))
         #cmd.spectrum("b", selection=cagePDBout2.replace(".pdb", ""))
-        #cmd.save(cagePDBout1.replace(".pdb", ".pse"))
+        cmd.save(filePDBout.replace(".pdb", ".pse"))
