@@ -9,6 +9,7 @@ from multiprocess import Pool
 
 import rdkit.Chem.AllChem as rdkit
 from rdkit.Geometry import Point3D
+from rdkit import Chem
 
 from hydrophobicity_values import hydrophValues
 
@@ -46,16 +47,16 @@ def cavity_volume(positions,radius=1.2, volume_grid_size=0.2):
     # if grid point within radius of position then we add volume of the grid
     return np.sum(np.sum(dist_matrix<radius,axis=0)>0)*(volume_grid_size**3)
 
-def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for_90_deg_angle = 7, save_only_surface = True,calculate_bfactor = True, compute_aromatic_contacts = False, compute_atom_contacts = True, distThreshold_atom_contacts = 5.0, number_of_dummies=500, dummy_atom_diameter=vdw_radii['h'], pore_radius_limit=10):
+def cavity(frame_index, syst, intput, output, grid_spacing = 1.0, distance_threshold_for_90_deg_angle = 7, save_only_surface = True,calculate_bfactor = True, compute_aromatic_contacts = False, compute_atom_contacts = True, distThreshold_atom_contacts = 5.0, number_of_dummies=500, dummy_atom_diameter=vdw_radii['h'], pore_radius_limit=10):
 
     syst.universe.trajectory[frame_index]
     if frame_index>0:
         print("Progress: {:d}/{:d}".format(frame_index, len(syst.universe.trajectory)), end = '\r')
 
     ########## cavity calculation
-    cageMOL = "fdsfdsfdsf.pdb"
+    cagePDB = intput
     # we need mol files as pdb file was not behaving OK with the aromatic
-    cagePDB = cageMOL.replace(".mol2", ".pdb")
+    cageMOL = cagePDB.replace(".pdb", ".mol2")
     #print(cagePDB)
     cagePDBout1 = cagePDB.replace(".pdb", ".cavity.pdb")
 
@@ -70,7 +71,73 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
     start_time = time.time()
 
     ## Using the PDB file as the MOL file for this example is not working, some issues as it was generated from the CIF file
-    #rdkit_cage = rdkit.MolFromMol2File(cageMOL, removeHs=False)
+    rdkit_cage = rdkit.MolFromMol2File(cageMOL, removeHs=False)
+    numberOfAtoms = rdkit_cage.GetNumAtoms()
+    
+        
+    listGlobalOut = list()
+    listGlobalOut2 = list() 
+    for i in hydrophValues:
+        #print("Dict list number " + str(i) + " " + hydrophValues[i][1])
+        match = rdkit_cage.GetSubstructMatches(Chem.MolFromSmarts(hydrophValues[i][1]),False,False)
+        #print(match)
+        listOut = list()
+        for x in match:
+            #print(x[0]+1)
+            listOut.append(x[0]+1)
+        
+        listGlobalOut2.append(list(set(listOut)))
+        if listOut:
+            #print(listOut)
+            #print(list(set(listOut)))
+            listGlobalOut.extend(list(set(listOut)))
+
+    #print(len(listGlobalOut2))
+    #print(listGlobalOut2)
+    #print(list(set(listGlobalOut)))
+    #print("++++++++++++++++++++++\n\n")
+
+    numberOfAtoms = rdkit_cage.GetNumAtoms()
+
+    atomTypesList = []
+    for i in range(0,numberOfAtoms):
+        atomTypesList.append([])
+    #print(atomTypesList)
+
+    atomTypesListHydrophValues = []
+    for i in range(0,numberOfAtoms):
+        atomTypesListHydrophValues.append([])
+    #print(atomTypesList)
+
+    atomTypesMeanListHydrophValues = []
+
+    for i in range(0, len(listGlobalOut2)):
+        #print("Atom type " + str(i))
+        if listGlobalOut2[i]:
+            #print(i)
+            for j in listGlobalOut2[i]:
+                #print(j)            
+                atomTypesList[j-1].append(i+1)
+                #print(atomTypesList[j-1])
+
+
+    for i in range(0,numberOfAtoms):
+        atomSymbol = rdkit_cage.GetAtomWithIdx(i).GetSymbol()
+        valuesList = []
+        if len(atomTypesList[i])>0:
+            valuesList = []
+            for j in atomTypesList[i]:
+                valuesList.append(hydrophValues[j][2])
+        
+        atomTypesListHydrophValues.append(valuesList)
+        meanValuestList = np.mean(valuesList)
+        atomTypesMeanListHydrophValues.append(meanValuestList)
+        print(atomSymbol, i+1, atomTypesList[i], valuesList, meanValuestList)
+
+
+    #print(atomTypesMeanListHydrophValues)
+    
+    
     '''
     rdkit_cage = rdkit.MolFromPDBFile(cagePDB,sanitize=False, removeHs=False, proximityBonding=False)
     
@@ -371,17 +438,28 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
                 if calculate_bfactor == True:
                     contacts = []
                     for atom_type in atom_type_list:
-                        if atom_type == "c":
+                        if atom_type:
+                        #if atom_type == "c":
                         #if atom_type != "h":
                             dist = KDTree_dict[atom_type].query(dummy_atom.pos, k=None, p=2,
                                                                 distance_upper_bound=distThreshold_atom_contacts)
+                            
+                            #print(dist)
 
                             if dist[0]:
                                 for k in range(0, len(dist[0])):
                                     if compute_atom_contacts == True:
                                         # print("compute_atom_contacts")
-                                        contacts.append(1)
+                                        #contacts.append(1)
                                         #contacts.append(1 / dist[0][k])
+                                        
+                                        #Fauchtre's distance function exp(-d), Journal of Computer-Aided Molecular Design, 1994, 8, 83-96
+                                        #contacts.append(atomTypesMeanListHydrophValues[dist[1][k]]*np.exp(-1*dist[0][k]))
+                                        
+                                        #Audry's distance function (1/(1+d)), Journal of Computer-Aided Molecular Design, 1994, 8, 83-96
+                                        contacts.append(atomTypesMeanListHydrophValues[dist[1][k]]/(1+dist[0][k]))
+                                        #print(atomTypesMeanListHydrophValues[dist[1][k]])
+                                        
                                     '''
                                     elif compute_aromatic_contacts == True:
                                         isAromatic = rdkit_cage.GetAtomWithIdx(
@@ -389,7 +467,7 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
                                         # print(isAromatic)
                                         if isAromatic == True:
                                             contacts.append(1 / dist[0][k])
-                                    '''
+                                    '''                            
 
                 dummy_universe.atoms[i].position = (dummy_atom.x, dummy_atom.y, dummy_atom.z)
                     
@@ -436,6 +514,13 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
         cageCavityVolume = rdkit.ComputeMolVolume(rdkit_molRW, confId=-1, gridSpacing=0.2, boxMargin=2.0)
         '''
         #print("Cage cavity volume = ", cageCavityVolume, " A3")
+        
+        cavity_hidrophobicity_list = []
+        for i, dummy_atom in enumerate(dummy_universe.atoms[dummies_inside]):
+            cavity_hidrophobicity_list.append(dummy_universe.atoms[i].tempfactor)
+        print("Individual hydrophobicity",cavity_hidrophobicity_list)
+        print("Total hydrophobicity", sum(cavity_hidrophobicity_list)/len(cavity_hidrophobicity_list)*cageCavityVolume)
+        
         return(cageCavityVolume)
     else:
         print("Cavity with no volume")
@@ -600,7 +685,7 @@ if __name__ == '__main__':
         else:
             fileTXTout = args.oc
         
-        cageCavityVolume = cavity(0, MDAnalysis.Universe(args.f), output = filePDBout,
+        cageCavityVolume = cavity(0, MDAnalysis.Universe(args.f), intput = args.f, output = filePDBout,
                                 grid_spacing=float(args.grid_spacing),
                                 distance_threshold_for_90_deg_angle=float(args.distance_threshold_for_90_deg_angle),
                                 distThreshold_atom_contacts=float(args.distThreshold_atom_contacts),
@@ -638,11 +723,11 @@ if __name__ == '__main__':
 
         else:
             cmd.set("surface_color", "cyan", selection="cavity")
-            #cmd.set("transparency", 0.5, selection="cavity")
+            cmd.set("transparency", 0.5, selection="cavity")
         
         cmd.show("surface", selection="cage")
         cmd.set("surface_color", "green", selection="cage") 
-        #cmd.set("transparency", 0.7, selection="cage")
+        cmd.set("transparency", 0.7, selection="cage")
         cmd.hide("surface", selection="cage")
         
         cmd.clip("atoms", 5, "All")
