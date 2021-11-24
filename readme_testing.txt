@@ -1,0 +1,1 @@
+python.exe .\main.py -pymol True -grid_spacing 2 -number_of_dummies 0 -bcolor True -distThreshold_atom_contacts 5 -bcolor_min none -bcolor_max none -dummy_atom_diameter 2 -distance_threshold_for_90_deg_angle 7 -pore_radius_limit 2 -f .\cage_ACIE_2006_45_901.pdb
