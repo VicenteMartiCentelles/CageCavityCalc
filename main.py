@@ -7,6 +7,9 @@ import os
 from functools import partial
 from multiprocess import Pool
 
+import rdkit.Chem.AllChem as rdkit
+from rdkit.Geometry import Point3D
+
 # there are a lot of warning, since not everythin is specify in pdb, let's ignore them
 import warnings
 warnings.filterwarnings("ignore")
@@ -41,9 +44,7 @@ def cavity_volume(positions,radius=1.2, volume_grid_size=0.2):
     # if grid point within radius of position then we add volume of the grid
     return np.sum(np.sum(dist_matrix<radius,axis=0)>0)*(volume_grid_size**3)
 
-def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for_90_deg_angle = 7, save_only_surface = True,
-         calculate_bfactor = True, compute_aromatic_contacts = False, compute_atom_contacts = True,
-         distThreshold_atom_contacts = 5.0, number_of_dummies=500):
+def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for_90_deg_angle = 7, save_only_surface = True,calculate_bfactor = True, compute_aromatic_contacts = False, compute_atom_contacts = True, distThreshold_atom_contacts = 5.0, number_of_dummies=500, dummy_atom_diameter=vdw_radii['h'], pore_radius_limit=10):
 
     syst.universe.trajectory[frame_index]
     if frame_index>0:
@@ -196,12 +197,14 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
 
     # Radius of the dummy H atoms in the cavity
     inside_cavity_grid = []
-    vdwRdummy = vdw_radii['h']# rdkit.GetPeriodicTable().GetRvdw(1)
+    #vdwRdummy = vdw_radii['h']# rdkit.GetPeriodicTable().GetRvdw(1)
+    vdwRdummy = dummy_atom_diameter
     for a, i in enumerate(calculatedGird.grid):
         dist1 = np.linalg.norm(np.array(pore_center_of_mass) - np.array(i.pos))
         if dist1 > 0:
             vect1Norm = (np.array(pore_center_of_mass) - np.array(i.pos)) / dist1
-        if (dist1 < pore_radius and pore_radius > 10):
+        #if (dist1 < pore_radius and pore_radius > 10):
+        if (dist1 < pore_radius_limit):
             i.inside_cavity = 1
             inside_cavity_grid.append(a)
         if i.inside_cavity == 0:
@@ -420,7 +423,16 @@ def cavity(frame_index, syst, output, grid_spacing = 1.0, distance_threshold_for
     #print("--- Total time %s seconds ---" % (time.time() - start_time))
 
     if len(dummies_inside) > 0:
-        cageCavityVolume = cavity_volume(dummy_universe.atoms[dummies_inside].positions, vdwRdummy)
+        cageCavityVolume = cavity_volume(dummy_universe.atoms[dummies_inside].positions, radius=vdwRdummy, volume_grid_size=0.2)
+        '''      
+        rdkit_molRW = rdkit.RWMol()
+        rdkit_conf = rdkit.Conformer(1)
+        for dummy_atom in dummy_universe.atoms[dummies_inside].positions:
+            indexNewAtom = rdkit_molRW.AddAtom(rdkit.Atom("H"))
+            rdkit_conf.SetAtomPosition(indexNewAtom,Point3D(float(dummy_atom[0]),float(dummy_atom[1]),float(dummy_atom[2])))
+        rdkit_molRW.AddConformer(rdkit_conf, assignId=True)
+        cageCavityVolume = rdkit.ComputeMolVolume(rdkit_molRW, confId=-1, gridSpacing=0.2, boxMargin=2.0)
+        '''
         #print("Cage cavity volume = ", cageCavityVolume, " A3")
         return(cageCavityVolume)
     else:
@@ -498,7 +510,9 @@ def get_args():
 
     # Parameter control
     parser.add_argument("-grid_spacing", default=1, help="")
+    parser.add_argument("-dummy_atom_diameter", default=1.2, help="dummyAtomDiameter")
     parser.add_argument("-distance_threshold_for_90_deg_angle", default=7, help="")
+    parser.add_argument("-pore_radius_limit", default=10, help="pore radius limit to consider in cavity")
     parser.add_argument("-save_only_surface", default=True, help="")
     parser.add_argument("-calculate_bfactor", default=True, help="")
     parser.add_argument("-compute_aromatic_contacts", default=False, help="")
@@ -541,7 +555,8 @@ if __name__ == '__main__':
                                 compute_aromatic_contacts=args.compute_aromatic_contacts,
                                 compute_atom_contacts=args.compute_atom_contacts,
                                 distThreshold_atom_contacts=args.distThreshold_atom_contacts,
-                                number_of_dummies=args.number_of_dummies)
+                                number_of_dummies=args.number_of_dummies,
+                                pore_radius_limit=args.pore_radius_limit)
 
         if args.e == -1:
             args.e = syst.trajectory.n_frames
@@ -587,7 +602,9 @@ if __name__ == '__main__':
                                 grid_spacing=float(args.grid_spacing),
                                 distance_threshold_for_90_deg_angle=float(args.distance_threshold_for_90_deg_angle),
                                 distThreshold_atom_contacts=float(args.distThreshold_atom_contacts),
-                                number_of_dummies=int(args.number_of_dummies))
+                                number_of_dummies=int(args.number_of_dummies),
+                                dummy_atom_diameter=float(args.dummy_atom_diameter),
+                                pore_radius_limit=float(args.pore_radius_limit))
         print("Cage cavity volume = ", cageCavityVolume, " A3")
         
         file1 = open(fileTXTout, "w+")
@@ -604,21 +621,26 @@ if __name__ == '__main__':
         cmd.set('valence', 0)
         #cmd.set_name(args.o.replace(".pdb", ""), "cage")
         
+        cmd.alter('name d', 'vdw="' + str(args.dummy_atom_diameter) + '"')
+        
         cmd.create("cavity", selection="elem D", extract=True)
         cmd.show_as("surface", selection="cavity")
         if args.bcolor.lower() == "true":
             if (args.bcolor_min.lower() != "none" and args.bcolor_max.lower() != "none"):
-                cmd.spectrum("b", selection="cavity")
-            else:
                 cmd.spectrum("b", minimum=float(args.bcolor_min), maximum=float(args.bcolor_max), selection="cavity")
+                cmd.ramp_new("ramp", "cavity", [-float(args.bcolor_min),float(args.bcolor_max)], "rainbow")
                 # def spectrum(expression="count", palette="rainbow",selection="(all)", minimum=None, maximum=None, byres=0, quiet=1):
+
+            else:
+                cmd.spectrum("b", selection="cavity")
+
         else:
             cmd.set("surface_color", "cyan", selection="cavity")
-            cmd.set("transparency", 0.5, selection="cavity")
+            #cmd.set("transparency", 0.5, selection="cavity")
         
         cmd.show("surface", selection="cage")
         cmd.set("surface_color", "green", selection="cage") 
-        cmd.set("transparency", 0.7, selection="cage")
+        #cmd.set("transparency", 0.7, selection="cage")
         cmd.hide("surface", selection="cage")
         
         cmd.clip("atoms", 5, "All")
