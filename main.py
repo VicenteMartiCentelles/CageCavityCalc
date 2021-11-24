@@ -305,7 +305,7 @@ def cavity(frame_index, syst, intput, output, grid_spacing = 1.0, distance_thres
                         vect2Norm = (np.array(atom_pos) - np.array(i.pos)) / dist2
                         angle = np.arccos(np.dot(vect1Norm, vect2Norm))
                         summAngles.append(angle)
-                        distancesAngles.append(1 / dist2)
+                        distancesAngles.append(1 / (1+dist2))
 
             if (summAngles):
                 # averageSummAngles = sum(summAngles) / len(summAngles)

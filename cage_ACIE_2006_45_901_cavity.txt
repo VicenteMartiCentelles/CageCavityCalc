@@ -1,1 +1,1 @@
-Cage cavity volume = 2670.57 A3
+Cage cavity volume = 2412.11 A3
