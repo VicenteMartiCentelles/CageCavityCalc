@@ -3,14 +3,11 @@ import rdkit.Chem.AllChem as rdkit
 import rdkit.Chem.rdmolops as rdkitrdmolops
 from rdkit.Geometry import Point3D
 from rdkit.Chem import Descriptors
-from rdkit import Chem
 from copy import deepcopy
 import numpy as np
 import math
 import time
 from scipy.spatial import KDTree
-
-from hydrophobicity_values import hydrophValues
 
 ########## cavity calculation
 cageMOL = "cage_ACIE_2006_45_901.mol2" #we need mol files as pdb file was not behaving OK with the aromatic
@@ -18,19 +15,17 @@ cagePDB = cageMOL.replace(".mol2", ".pdb")
 print(cagePDB)
 cagePDBout1 = cagePDB.replace(".pdb", ".cavity.pdb")
 
-grid_spacing = 2
+grid_spacing = 1.0
 distance_threshold_for_90_deg_angle = 7 #10
 save_only_surface = True
 calculate_bfactor = True
 compute_aromatic_contacts = False
 compute_atom_contacts = True
 distThreshold_atom_contacts = 5.0
-dummy_atom_radii = 2
 
 calculate_windows = True
 
 threads_KDThree = 4
-
 
 ######################################################################
 ###   Calculate cavity
@@ -40,59 +35,16 @@ print("\n--- Calculation of the cavity ---")
 start_time = time.time()
 
 ## Using the PDB file as the MOL file for this example is not working, some issues as it was generated from the CIF file
-rdkit_cage = rdkit.MolFromMol2File(cageMOL,removeHs=False)
-#rdkit_cage = rdkit.MolFromPDBFile(cagePDB,sanitize=False,removeHs=False,proximityBonding=False)
+#rdkit_cage = rdkit.MolFromMol2File(cageMOL,removeHs=False)
+rdkit_cage = rdkit.MolFromPDBFile(cagePDB,sanitize=False,removeHs=False,proximityBonding=False)
 
 
-#Calculate the center of mass
+#Calculate the centeor of mass
 atoms = [ atom for atom in rdkit_cage.GetAtoms() ]
 numberOfAtoms = rdkit_cage.GetNumAtoms()
 xyzPositionArray =  np.array([list( rdkit_cage.GetConformer().GetAtomPosition(i) ) for i in range(numberOfAtoms)])
 center_of_mass = np.array(sum(atoms[i].GetMass()*xyzPositionArray[i] for i in range(numberOfAtoms)))/Descriptors.MolWt(rdkit_cage)
 print("center_of_mass= ", center_of_mass)
-
-# Assign the hydrophobic values to cage atoms from the library
-listGlobalOut = list()
-listGlobalOut2 = list() 
-for i in hydrophValues:
-    match = rdkit_cage.GetSubstructMatches(Chem.MolFromSmarts(hydrophValues[i][1]),False,False)
-    listOut = list()
-    for x in match:
-        listOut.append(x[0]+1)
-    listGlobalOut2.append(list(set(listOut)))
-    if listOut:
-        listGlobalOut.extend(list(set(listOut)))
-
-numberOfAtoms = rdkit_cage.GetNumAtoms()
-
-atomTypesList = []
-for i in range(0,numberOfAtoms):
-    atomTypesList.append([])
-
-atomTypesListHydrophValues = []
-for i in range(0,numberOfAtoms):
-    atomTypesListHydrophValues.append([])
-
-atomTypesMeanListHydrophValues = []
-
-for i in range(0, len(listGlobalOut2)):
-    if listGlobalOut2[i]:
-        for j in listGlobalOut2[i]:          
-            atomTypesList[j-1].append(i+1)
-
-for i in range(0,numberOfAtoms):
-    atomSymbol = rdkit_cage.GetAtomWithIdx(i).GetSymbol()
-    valuesList = []
-    if len(atomTypesList[i])>0:
-        valuesList = []
-        for j in atomTypesList[i]:
-            valuesList.append(hydrophValues[j][2])
-    
-    atomTypesListHydrophValues.append(valuesList)
-    meanValuestList = np.mean(valuesList)
-    atomTypesMeanListHydrophValues.append(meanValuestList)
-    print(atomSymbol, i+1, atomTypesList[i], valuesList, meanValuestList)
-
 
 
 # Get the xyx atom coordinates
@@ -162,7 +114,15 @@ calculatedGird = CageGrid(pore_center_of_mass, box_size, delta = 0, grid_spacing
 
 # Create a KDThree of the dummy atom gird
 calculatedGirdKDTree = KDTree(calculatedGird.gridPosList, leafsize = 20)
+# Calculate contacts of dummy atoms with a distance < 1.1*grid_spacing, rages from 1 to 7 (as 1 contact is always, the atom itself)
 
+'''
+for dummy_atom in calculatedGird.grid:
+    xyzDummySet = calculatedGirdKDTree.query(dummy_atom.pos, k=None, p=2, distance_upper_bound=1.1*grid_spacing)
+    dummy_atom.neighbors = xyzDummySet[1] #does not work as the index does not correspond
+'''
+
+## IMPROVED ALGORITHM USING KDThree
 atom_type_list = []
 coords_dict = {}
 vdwR_dict = {}
@@ -181,14 +141,20 @@ for cage_atom in rdkit_cage.GetAtoms():
     coords_dict.setdefault(atom_type, []).append(list(pos))
     atom_idx_dict.setdefault(atom_type, []).append(atom_idx)
 
+#print(atom_type_list)
+print(vdwR_dict)
+#print(coords_dict)
+#print(atom_idx_dict)
+
 #Create a KDTree for each atom type and store in a dict
 KDTree_dict = {}
 for atom_type in atom_type_list:
+    #print(coords_dict[atom_type])
+    #print(atom_type)
     KDTree_dict[atom_type] = KDTree(coords_dict[atom_type], leafsize = 20)
 
-#Radius of the dummy D atoms in the cavity defined with a custom diameter
-#vdwRdummy = rdkit.GetPeriodicTable().GetRvdw(1)
-vdwRdummy = dummy_atom_radii
+#Radius of the dummy H atoms in the cavity
+vdwRdummy = rdkit.GetPeriodicTable().GetRvdw(1)
 for i in calculatedGird.grid:
     dist1 = np.linalg.norm(np.array(pore_center_of_mass)-np.array(i.pos))
     if dist1 > 0:
@@ -204,8 +170,27 @@ for i in calculatedGird.grid:
                 vdwR = vdwR_dict[atom_type][0]
                 distThreshold = vdwR + vdwRdummy
                 if xyzAtomsSet2[0][0] < distThreshold:
+                    #print("Dummy atom overlapping with cage")
                     i.overlapping_with_cage = 1
-
+                    #break
+                '''
+                for z in range(0, len(xyzAtomsSet2[1])):
+                    #print(xyzAtomsSet2[0][0], distThreshold, vdwR, vdwRdummy)
+                    if xyzAtomsSet2[0][z] < 1.01*distThreshold:
+                        #print("Dummy atom overlapping with cage")
+                        i.overlapping_with_cage = 1
+                        break
+                '''
+                        
+                        
+                # check that distances are the same by KDTree query an position based calculation
+                """"
+                for z in range (0,len(xyzAtomsSet2[1])):
+                    atom_pos = coords_dict[atom_type][xyzAtomsSet2[1][z]]
+                    dist2 = np.linalg.norm(np.array(atom_pos)-np.array(i.pos))
+                    print(xyzAtomsSet2[0][z], dist2)
+                """
+                
                 for atom_pos_index in xyzAtomsSet2[1]:
                     atom_pos = coords_dict[atom_type][atom_pos_index]
                     dist2 = np.linalg.norm(np.array(atom_pos)-np.array(i.pos))
@@ -214,12 +199,42 @@ for i in calculatedGird.grid:
                     summAngles.append(angle)
                     distancesAngles.append(1/dist2)
         if (summAngles):
+            #averageSummAngles = sum(summAngles) / len(summAngles)
             averageSummAngles = np.average(summAngles, axis=None, weights=distancesAngles)
             averageSummAngles_deg = np.degrees(averageSummAngles)
             i.vector_angle = averageSummAngles_deg 
             if i.overlapping_with_cage == 0:
                 if averageSummAngles_deg > 90:
+                    #print("Added dummy atom to cavity", np.degrees(averageSummAngles), i.overlapping_with_cage)
                     i.inside_cavity = 1
+
+      
+        """
+        for j, cage_atom in enumerate(rdkit_cage.GetAtoms()):
+        #for cage_atom in rdkit_cage.GetAtoms():
+            if len(xyzAtomsSet[1]):
+                if (cage_atom.GetIdx() in xyzAtomsSet[1]):
+                    vdwR = rdkit.GetPeriodicTable().GetRvdw(cage_atom.GetAtomicNum())
+                    distThreshold = vdwR + vdwRdummy
+                    xyzAtomsSet2 = kdtxyzAtoms.query(i.pos, k = None, p = 2, distance_upper_bound = distThreshold)
+                    if xyzAtomsSet2[1] == []:
+                        pos1 = rdkit_cage.GetConformer().GetAtomPosition(cage_atom.GetIdx())                
+                        dist2 = np.linalg.norm(np.array(pos1)-np.array(i.pos))
+                        vect2Norm = (np.array(pos1)-np.array(i.pos)) / dist2
+                        angle = np.arccos(np.dot(vect1Norm, vect2Norm))
+                        
+                        summAngles.append(angle)
+                        distancesAngles.append(1/dist2)
+                        
+                        #if np.degrees(angle) < 150:
+                        #    summAngles.append(angle)
+                        
+                        #if np.degrees(angle) > 140:
+                        #    i.inside_cavity = 1
+                        #    break
+        """
+        
+
 
 
 # Create a KDThree of the dummy atom girds to  remove isolated dummy atoms with a distance < 2*vdwRdummy
@@ -237,6 +252,7 @@ for i, dummy_atom in enumerate(calculatedGird.grid):
 
 
 # Create a KDThree of the dummy atom girds to that overlap with the cage
+
 for i in calculatedGird.grid:   
     for atom_type in atom_type_list:
         vdwR = vdwR_dict[atom_type][0]
@@ -257,6 +273,33 @@ for i in calculatedGird.grid:
         overlappingCalculatedGirdContacts_angles.append(i.vector_angle)
 overlappingCalculatedGirdContactsKDTree = KDTree(overlappingCalculatedGirdContacts, leafsize = 20)
 
+## IMPROVED ALGORITHM USING KDThree
+# Remove dummy atoms overapping by the cage
+
+#distance111 = KDTree_dict['Pd'].query([0,0,0], k = None, p = 2, distance_upper_bound = 50)
+#print(distance111)
+"""
+for i, dummy_atom in enumerate(calculatedGird.grid):
+    if dummy_atom.inside_cavity == 1:
+        for atom_type in atom_type_list:
+            vdwR = vdwR_dict[atom_type][0]
+            distThreshold = vdwR + vdwRdummy
+            dist1 = KDTree_dict[atom_type].query(dummy_atom.pos, k = 1, p = 2)
+            if dist1[0] < 1.01*distThreshold:
+                dummy_atom.inside_cavity = 0
+"""
+"""
+for i, dummy_atom in enumerate(calculatedGird.grid):
+    if dummy_atom.inside_cavity == 1:
+        for cage_atom in rdkit_cage.GetAtoms():
+            pos1 = rdkit_cage.GetConformer().GetAtomPosition(cage_atom.GetIdx())
+            vdwR = rdkit.GetPeriodicTable().GetRvdw(cage_atom.GetAtomicNum())
+            distThreshold = vdwR + vdwRdummy
+            dist1 = np.linalg.norm(np.array(pos1)-np.array(dummy_atom.pos))
+            if dist1 < 1.01*distThreshold:
+                dummy_atom.inside_cavity = 0
+"""
+
 
 #Create an empty editable molecule
 rdkit_molRW = rdkit.RWMol()
@@ -275,9 +318,7 @@ for i, dummy_atom in enumerate(calculatedGird.grid):
                     #print("dummy atom not in a window")
 
         # Remove isolated dummy atoms with a distance < 1.1*grid_spacing
-        if ( dummy_atom.number_of_neighbors > 1):
-        ## at the moment dissabled, with this line only the atoms on the surface of the cavity are saved
-        #if (  (dummy_atom.number_of_neighbors > 1 and dummy_atom.number_of_neighbors < 7 and save_only_surface == True)):
+        if (  (dummy_atom.number_of_neighbors > 1 and dummy_atom.number_of_neighbors < 7 and save_only_surface == True)):
             if calculate_bfactor == True:
                 contacts = []                
                 for atom_type in atom_type_list:
@@ -288,8 +329,7 @@ for i, dummy_atom in enumerate(calculatedGird.grid):
                             for k in range (0, len(dist[0])):
                                 if compute_atom_contacts == True:
                                     #print("compute_atom_contacts")
-                                    #contacts.append(1/dist[0][k])
-                                    contacts.append(atomTypesMeanListHydrophValues[dist[1][k]]/(1+dist[0][k]))
+                                    contacts.append(1/dist[0][k])
                                 elif compute_aromatic_contacts == True:
                                     isAromatic = rdkit_cage.GetAtomWithIdx(atom_idx_dict[atom_type][dist[1][k]]).GetIsAromatic()
                                     #print(isAromatic)
@@ -300,21 +340,21 @@ for i, dummy_atom in enumerate(calculatedGird.grid):
             #Change the postion of the atom to a custom x, y, z postion
             rdkit_conf.SetAtomPosition(indexNewAtom,Point3D(dummy_atom.x,dummy_atom.y,dummy_atom.z))
             molecInfo = rdkit.AtomPDBResidueInfo()            
-            molecInfo.SetName(' D') # the rdkit PDB name has incorrect whitespace
+            molecInfo.SetName(' H') # the rdkit PDB name has incorrect whitespace
             molecInfo.SetResidueName('HOH')            
-            molecInfo.SetResidueName(''.ljust(2-len('D'))+'HOH') # the rdkit PDB residue name has incorrect whitespace
+            molecInfo.SetResidueName(''.ljust(2-len('H'))+'HOH') # the rdkit PDB residue name has incorrect whitespace
             molecInfo.SetResidueNumber(indexNewAtom+1)
             molecInfo.SetIsHeteroAtom(False)
             molecInfo.SetOccupancy(1.0)
             if calculate_bfactor == True:
-                molecInfo.SetTempFactor( sum(contacts) )  #Save in the b-factor the hydropobicity
+                #molecInfo.SetTempFactor( sum(contacts) )  #Save in the b-factor the mumber of contacts
                 
-                #if dummy_atom.is_window == 1:
-                #    molecInfo.SetTempFactor( 0 )  #Save in the b-factor the mumber of contacts
-                #else:
-                #    molecInfo.SetTempFactor( 1 )
+                if dummy_atom.is_window == 1:
+                    molecInfo.SetTempFactor( 0 )  #Save in the b-factor the mumber of contacts
+                else:
+                    molecInfo.SetTempFactor( 1 )
             else:
-                molecInfo.SetTempFactor( 0 )
+                molecInfo.SetTempFactor( 1 )
             #molecInfo.SetTempFactor(dummy_atom.inside_cavity)
             #molecInfo.SetTempFactor(dummy_atom.d_from_center) # Save in the b-factor the distance from the center
             rdkit_molRW.GetAtomWithIdx(indexNewAtom).SetMonomerInfo(molecInfo)
@@ -339,6 +379,36 @@ else:
 
 
 
+
+
+#Create an empty editable molecule
+rdkit_molRW = rdkit.RWMol()
+rdkit_conf = rdkit.Conformer(1)
+for i, dummy_atom in enumerate(calculatedGird.grid):
+    if (dummy_atom.vector_angle > 90 and dummy_atom.overlapping_with_cage == 1):
+    #if dummy_atom.overlapping_with_cage == 1:                    
+            indexNewAtom = rdkit_molRW.AddAtom(rdkit.Atom(1))
+            rdkit_conf.SetAtomPosition(indexNewAtom,Point3D(dummy_atom.x,dummy_atom.y,dummy_atom.z))
+            molecInfo = rdkit.AtomPDBResidueInfo()            
+            molecInfo.SetName(' H') # the rdkit PDB name has incorrect whitespace
+            molecInfo.SetResidueName('HOH')            
+            molecInfo.SetResidueName(''.ljust(2-len('H'))+'HOH') # the rdkit PDB residue name has incorrect whitespace
+            molecInfo.SetResidueNumber(indexNewAtom+1)
+            molecInfo.SetIsHeteroAtom(False)
+            molecInfo.SetOccupancy(1.0)
+            molecInfo.SetTempFactor( dummy_atom.vector_angle )
+            rdkit_molRW.GetAtomWithIdx(indexNewAtom).SetMonomerInfo(molecInfo)
+
+rdkit_molRW.AddConformer(rdkit_conf, assignId=True)
+print("Saving PDB file with the dummy cavity atoms")
+cagePDBout2 = cagePDBout1.replace(".pdb", "-overlap.pdb")
+rdkit.MolToPDBFile(rdkit_molRW, cagePDBout2)
+
+
+
+
+
+
 print("--- Total time %s seconds ---" % (time.time() - start_time))
 
 ######################################################################
@@ -350,22 +420,21 @@ import pymol
 pymol.pymol_argv = ['pymol','-q']
 pymol.finish_launching()
 cmd = pymol.cmd
-cmd.load(cagePDB, "cage")
+#cmd.load(cageMOL)
+cmd.load(cagePDB)
 cmd.set('valence', 0)
-cmd.load(cagePDBout1, "cavity")
-
-cmd.alter('name D', 'vdw="' + str(dummy_atom_radii) + '"')
-
-#cmd.show_as("surface", selection="cavity")
-cmd.show_as("nonbonded", selection="cavity")
-
-cmd.spectrum("b", selection="cavity")
-#cmd.set("surface_color", "withe", selection="cavity")
-#cmd.set("transparency", 0.5, cage_name)
-
-
+cmd.load(cagePDBout1)
+cmd.show("surface", selection=cagePDBout1.replace(".pdb", ""))
 cmd.clip("atoms", 5, "All")
-cmd.orient("cage")
-cmd.zoom("cage")
+#def spectrum(expression="count", palette="rainbow",selection="(all)", minimum=None, maximum=None, byres=0, quiet=1):
+cmd.spectrum("b", selection=cagePDBout1.replace(".pdb", ""))
+cmd.load(cagePDBout2)
+cmd.show("spheres", selection=cagePDBout2.replace(".pdb", ""))
+cmd.spectrum("b", selection=cagePDBout2.replace(".pdb", ""))
+
+cage_name = cagePDB.replace(".pdb", "")
+cmd.show("surface", cage_name)
+cmd.set("surface_color", "withe", cage_name)
+#cmd.set("transparency", 0.5, cage_name)
 
 cmd.save(cagePDBout1.replace(".pdb", ".pse"))
