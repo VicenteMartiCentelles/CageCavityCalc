@@ -1,2 +1,3 @@
-Cage cavity volume = 2813.1600000000008 A3
-Total cavity hydrophobicity = 64.73899094436601
+Cage cavity volume = 2150.2400000000007 A3
+Average cavity hydrophobicity = 23.13177954332052
+Total cavity hydrophobicity = 23.13177954332052 A^-3
