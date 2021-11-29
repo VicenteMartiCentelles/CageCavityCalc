@@ -11,25 +11,28 @@ import time
 from scipy.spatial import KDTree
 
 from hydrophobicity_values import hydrophValues
+from calculations import cavity_volume
 
 ########## cavity calculation
 cageMOL = "cage_ACIE_2006_45_901.mol2" #we need mol files as pdb file was not behaving OK with the aromatic
 cagePDB = cageMOL.replace(".mol2", ".pdb")
-print(cagePDB)
-cagePDBout1 = cagePDB.replace(".pdb", ".cavity.pdb")
+cagePDBout1 = cagePDB.replace(".pdb", "_cavity.pdb")
 
-grid_spacing = 2
+grid_spacing = 3
 distance_threshold_for_90_deg_angle = 7 #10
 save_only_surface = True
 calculate_bfactor = True
 compute_aromatic_contacts = False
 compute_atom_contacts = True
 distThreshold_atom_contacts = 5.0
-dummy_atom_radii = 2
+dummy_atom_radii = 3
+distanceFromCOMFactor = 0.8 #Distance from the center of mass factor 0-1 to consider spherical cavity
 
-calculate_windows = True
+calculate_windows = False
 
 threads_KDThree = 4
+
+printLevel = 1 #print level 1 = normal print, print level 2 = print all info
 
 
 ######################################################################
@@ -39,12 +42,12 @@ print("\n--- Calculation of the cavity ---")
 
 start_time = time.time()
 
-## Using the PDB file as the MOL file for this example is not working, some issues as it was generated from the CIF file
+## Load cage MOL file using RDKit
 rdkit_cage = rdkit.MolFromMol2File(cageMOL,removeHs=False)
 #rdkit_cage = rdkit.MolFromPDBFile(cagePDB,sanitize=False,removeHs=False,proximityBonding=False)
 
 
-#Calculate the center of mass
+#Calculate the center of mass of the cage using RDKit
 atoms = [ atom for atom in rdkit_cage.GetAtoms() ]
 numberOfAtoms = rdkit_cage.GetNumAtoms()
 xyzPositionArray =  np.array([list( rdkit_cage.GetConformer().GetAtomPosition(i) ) for i in range(numberOfAtoms)])
@@ -91,11 +94,11 @@ for i in range(0,numberOfAtoms):
     atomTypesListHydrophValues.append(valuesList)
     meanValuestList = np.mean(valuesList)
     atomTypesMeanListHydrophValues.append(meanValuestList)
-    print(atomSymbol, i+1, atomTypesList[i], valuesList, meanValuestList)
+    if (printLevel == 2): print(atomSymbol, i+1, atomTypesList[i], valuesList, meanValuestList)
 
 
 
-# Get the xyx atom coordinates
+# Get cage xyx atom coordinates
 xyzAtoms = np.array([rdkit_cage.GetConformer().GetAtomPosition(cage_atom.GetIdx()) for cage_atom in rdkit_cage.GetAtoms()], dtype=np.float64)
 # Calculate neighbors with KDTree. Leaf_size affects the speed of a query and the memory required to store the constructed tree. 
 # The amount of memory needed to store the tree scales as approximately n_samples / leaf_size.
@@ -106,7 +109,7 @@ result = kdtxyzAtoms.query(xyzAtoms[30], k = None, p = 2, distance_upper_bound =
 #We use the center of mass of the molecule as the pore center of mass and the pore radius as the 95% of the close contact to the center_of_mass
 pore_center_of_mass = center_of_mass
 distancesFromCOM = kdtxyzAtoms.query(center_of_mass, k = None, p = 2)
-pore_radius = distancesFromCOM[0][0]*0.8
+pore_radius = distancesFromCOM[0][0]*distanceFromCOMFactor
 maxDistanceFromCOM = (distancesFromCOM[0][-1])
 pore_diameter = pore_radius*2
 
@@ -157,8 +160,6 @@ class CageGrid:
 box_size = maxDistanceFromCOM
 print("box_size=", box_size)
 calculatedGird = CageGrid(pore_center_of_mass, box_size, delta = 0, grid_spacing = grid_spacing)
-
-#-#-#-#-# KDTree algorithm to speed up the method, needs to be implemented with the code below
 
 # Create a KDThree of the dummy atom gird
 calculatedGirdKDTree = KDTree(calculatedGird.gridPosList, leafsize = 20)
@@ -222,21 +223,20 @@ for i in calculatedGird.grid:
                     i.inside_cavity = 1
 
 
-# Create a KDThree of the dummy atom girds to  remove isolated dummy atoms with a distance < 2*vdwRdummy
+# Create a KDThree of the dummy atoms
 calculatedGirdContacts = []
 for i in calculatedGird.grid:
     if i.inside_cavity == 1:
         calculatedGirdContacts.append(i.pos) 
 calculatedGirdContactsKDTree = KDTree(calculatedGirdContacts, leafsize = 20)
 
-# Calculate contacts of dummy atoms with a distance < 1.1*grid_spacing, rages from 1 to 7 (as 1 contact is alwas, the atom itself)
+# Calculate contacts of dummy atoms with a distance < 1.1*grid_spacing, ranges from 1 to 7 (as 1 contact is alwas, the atom itself)
 for i, dummy_atom in enumerate(calculatedGird.grid):
     if dummy_atom.inside_cavity == 1:
         xyzDummySet = calculatedGirdContactsKDTree.query(dummy_atom.pos, k=None, p=2, distance_upper_bound=1.1*grid_spacing)
         dummy_atom.number_of_neighbors = len(xyzDummySet[1])
 
-
-# Create a KDThree of the dummy atom girds to that overlap with the cage
+# Create a KDThree of the dummy atom girds that overlap with the cage
 for i in calculatedGird.grid:   
     for atom_type in atom_type_list:
         vdwR = vdwR_dict[atom_type][0]
@@ -252,13 +252,12 @@ overlappingCalculatedGirdContacts = []
 overlappingCalculatedGirdContacts_angles = []
 for i in calculatedGird.grid:
     if i.overlapping_with_cage == 1:
-        #if i.vector_angle > 90:
         overlappingCalculatedGirdContacts.append(i.pos)
         overlappingCalculatedGirdContacts_angles.append(i.vector_angle)
 overlappingCalculatedGirdContactsKDTree = KDTree(overlappingCalculatedGirdContacts, leafsize = 20)
 
 
-#Create an empty editable molecule
+#Create an empty editable molecule in RDKit
 rdkit_molRW = rdkit.RWMol()
 rdkit_conf = rdkit.Conformer(1)
 
@@ -274,27 +273,26 @@ for i, dummy_atom in enumerate(calculatedGird.grid):
                     dummy_atom.is_window = 1
                     #print("dummy atom not in a window")
 
-        # Remove isolated dummy atoms with a distance < 1.1*grid_spacing
+        # Remove isolated dummy atoms that only have one neighbors 
         if ( dummy_atom.number_of_neighbors > 1):
         ## at the moment dissabled, with this line only the atoms on the surface of the cavity are saved
         #if (  (dummy_atom.number_of_neighbors > 1 and dummy_atom.number_of_neighbors < 7 and save_only_surface == True)):
             if calculate_bfactor == True:
-                contacts = []                
+                bfactor_info = []                
                 for atom_type in atom_type_list:
-                    if atom_type != "H":
-                        dist = KDTree_dict[atom_type].query(dummy_atom.pos, k = None, p = 2, distance_upper_bound = distThreshold_atom_contacts, workers = threads_KDThree)
+                    dist = KDTree_dict[atom_type].query(dummy_atom.pos, k = None, p = 2, distance_upper_bound = distThreshold_atom_contacts, workers = threads_KDThree)
 
-                        if dist[0]:
-                            for k in range (0, len(dist[0])):
-                                if compute_atom_contacts == True:
-                                    #print("compute_atom_contacts")
-                                    #contacts.append(1/dist[0][k])
-                                    contacts.append(atomTypesMeanListHydrophValues[dist[1][k]]/(1+dist[0][k]))
-                                elif compute_aromatic_contacts == True:
-                                    isAromatic = rdkit_cage.GetAtomWithIdx(atom_idx_dict[atom_type][dist[1][k]]).GetIsAromatic()
-                                    #print(isAromatic)
-                                    if isAromatic == True:
-                                        contacts.append(1/dist[0][k])
+                    if dist[0]:
+                        for k in range (0, len(dist[0])):
+                            if compute_atom_contacts == True:
+                                #print("compute_atom_contacts")
+                                #bfactor_info.append(1/dist[0][k])
+                                bfactor_info.append(atomTypesMeanListHydrophValues[dist[1][k]]/(1+dist[0][k]))
+                            elif compute_aromatic_contacts == True:
+                                isAromatic = rdkit_cage.GetAtomWithIdx(atom_idx_dict[atom_type][dist[1][k]]).GetIsAromatic()
+                                #print(isAromatic)
+                                if isAromatic == True:
+                                    bfactor_info.append(1/dist[0][k])
                                             
             indexNewAtom = rdkit_molRW.AddAtom(rdkit.Atom(1))
             #Change the postion of the atom to a custom x, y, z postion
@@ -307,7 +305,7 @@ for i, dummy_atom in enumerate(calculatedGird.grid):
             molecInfo.SetIsHeteroAtom(False)
             molecInfo.SetOccupancy(1.0)
             if calculate_bfactor == True:
-                molecInfo.SetTempFactor( sum(contacts) )  #Save in the b-factor the hydropobicity
+                molecInfo.SetTempFactor( sum(bfactor_info) )  #Save in the b-factor the hydropobicity
                 
                 #if dummy_atom.is_window == 1:
                 #    molecInfo.SetTempFactor( 0 )  #Save in the b-factor the mumber of contacts
@@ -328,21 +326,37 @@ rdkit.MolToPDBFile(rdkit_molRW, cagePDBout1)
 #rdkit.MolToMolFile(rdkit_molRW, cageMOLout1)
 
 if len(rdkit_molRW.GetAtoms()) >0:
-	cageCavityVolume = rdkit.ComputeMolVolume(rdkit_molRW, confId=-1, gridSpacing=0.2, boxMargin=2.0)
-	print("Cage cavity volume = ", cageCavityVolume, " A3")
-	cage_name = cagePDB.replace(".pdb", "")
-	file1 = open(cage_name+"_cavity_vol_calc.txt","w+")
-	file1.write("PCage cavity volume = " + str(cageCavityVolume) + " A3\n")
-	file1.close()
+    ##Calculation of the volume of the cavity using RDKit
+    #cageCavityVolume = rdkit.ComputeMolVolume(rdkit_molRW, confId=-1, gridSpacing=0.2, boxMargin=2.0)
+    #print("Cage cavity volume (rdkit calc.) = ", cageCavityVolume, " A3")
+    
+    xyzPositionArrayMolRW =  np.array([list( rdkit_molRW.GetConformer().GetAtomPosition(i) ) for i in range(rdkit_molRW.GetNumAtoms())])
+    
+    cageCavityVolume = cavity_volume(xyzPositionArrayMolRW, radius=dummy_atom_radii, volume_grid_size=0.2)
+    
+    print("Cage cavity volume = ", cageCavityVolume, " A3")
+    
+    cavity_dummy_atoms = [ atom for atom in rdkit_molRW.GetAtoms() ]
+    hydrophobicity_cavity_dummy_atoms = [ atom.GetMonomerInfo().GetTempFactor() for atom in cavity_dummy_atoms ]
+
+    if (printLevel == 2): print("Individual hydrophobicity",hydrophobicity_cavity_dummy_atoms)
+    total_cavity_hydrophobicity = sum(hydrophobicity_cavity_dummy_atoms)/len(hydrophobicity_cavity_dummy_atoms)*cageCavityVolume
+    print("Total cavity hydrophobicity", total_cavity_hydrophobicity )   
+  
+    cage_name = cagePDB.replace(".pdb", "")
+    file1 = open(cage_name+"_cavity_vol_calc.txt","w+")
+    file1.write("Cage cavity volume = " + str(cageCavityVolume) + " A3\n")
+    file1.write("Total cavity hydrophobicity = " + str(total_cavity_hydrophobicity) )
+    file1.close()
 else:
-	print("Cavity with no volume")
+    print("Cavity with no volume")
 
 
 
 print("--- Total time %s seconds ---" % (time.time() - start_time))
 
 ######################################################################
-###   Calculate cavity contacts and save to PDB b-factor
+###        Open the saved cavity in PyMol
 ######################################################################
 
 # pymol launching: quiet (-q)
@@ -356,8 +370,10 @@ cmd.load(cagePDBout1, "cavity")
 
 cmd.alter('name D', 'vdw="' + str(dummy_atom_radii) + '"')
 
+#cmd.show_as("nonbonded", selection="cavity")
 #cmd.show_as("surface", selection="cavity")
-cmd.show_as("nonbonded", selection="cavity")
+cmd.show_as("spheres", selection="cavity")
+cmd.show_as("spheres", selection="cage")
 
 cmd.spectrum("b", selection="cavity")
 #cmd.set("surface_color", "withe", selection="cavity")

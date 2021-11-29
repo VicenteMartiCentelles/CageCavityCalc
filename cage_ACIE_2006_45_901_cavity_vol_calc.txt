@@ -1,1 +1,2 @@
-PCage cavity volume = 1510.8960000000004 A3
+Cage cavity volume = 2813.1600000000008 A3
+Total cavity hydrophobicity = 64.73899094436601
