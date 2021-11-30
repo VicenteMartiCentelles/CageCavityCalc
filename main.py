@@ -51,29 +51,27 @@ xyzPositionArray =  np.array([list( rdkit_cage.GetConformer().GetAtomPosition(i)
 center_of_mass = np.array(sum(atoms[i].GetMass()*xyzPositionArray[i] for i in range(numberOfAtoms)))/Descriptors.MolWt(rdkit_cage)
 print("center_of_mass= ", center_of_mass)
 
-# Assign the hydrophobic values to cage atoms from the library
-atomTypesMeanListHydrophValues = assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel)
-
-# Get cage xyx atom coordinates
-xyzAtoms = np.array([rdkit_cage.GetConformer().GetAtomPosition(cage_atom.GetIdx()) for cage_atom in rdkit_cage.GetAtoms()], dtype=np.float64)
-# Calculate neighbors with KDTree. Leaf_size affects the speed of a query and the memory required to store the constructed tree. 
-# The amount of memory needed to store the tree scales as approximately n_samples / leaf_size.
-kdtxyzAtoms = KDTree(xyzAtoms, leafsize = 20)
-
 #We use the center of mass of the molecule as the pore center of mass
 pore_center_of_mass = center_of_mass
+kdtxyzAtoms = KDTree(xyzPositionArray, leafsize = 20) #Calculate the KDTree of the cage atom positions
 distancesFromCOM = kdtxyzAtoms.query(center_of_mass, k = None, p = 2)
 maxDistanceFromCOM = (distancesFromCOM[0][-1])
 pore_radius = distancesFromCOM[0][0]*distanceFromCOMFactor
 
+# Assign the hydrophobic values to cage atoms from the library
+atomTypesMeanListHydrophValues = assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel)
 
-box_size = maxDistanceFromCOM
-print("box_size=", box_size)
+# Calculate the cage bounding box using the x,y,z axis
+#box_size = maxDistanceFromCOM ## Not used, in this previous version we used a square box
+x_coordinates, y_coordinates, z_coordinates = zip(* xyzPositionArray)
+box_size = [min(x_coordinates),max(x_coordinates),min(y_coordinates),max(y_coordinates),min(z_coordinates),max(z_coordinates)]
+print("Box x min/max= ", box_size[0], box_size[1])
+print("Box y min/max= ", box_size[2], box_size[3])
+print("Box z min/max= ", box_size[4], box_size[5])
+
 calculatedGird = CageGrid(pore_center_of_mass, box_size, delta = 0, grid_spacing = grid_spacing)
 
-# Create a KDThree of the dummy atom gird
-calculatedGirdKDTree = KDTree(calculatedGird.gridPosList, leafsize = 20)
-
+#Create a KDTree for each atom type and store in a dict
 atom_type_list = []
 coords_dict = {}
 vdwR_dict = {}
@@ -92,14 +90,13 @@ for cage_atom in rdkit_cage.GetAtoms():
     coords_dict.setdefault(atom_type, []).append(list(pos))
     atom_idx_dict.setdefault(atom_type, []).append(atom_idx)
 
-#Create a KDTree for each atom type and store in a dict
 KDTree_dict = {}
 for atom_type in atom_type_list:
     KDTree_dict[atom_type] = KDTree(coords_dict[atom_type], leafsize = 20)
 
-#Radius of the dummy D atoms in the cavity defined with a custom diameter
-#vdwRdummy = rdkit.GetPeriodicTable().GetRvdw(1)
-vdwRdummy = dummy_atom_radii
+
+#Calculate the dummy atoms that form the cavity using the angle method, also check that atoms do not overlap with cage
+vdwRdummy = dummy_atom_radii #Radius of the dummy D atoms in the cavity defined with a custom diameter
 for i in calculatedGird.grid:
     dist1 = np.linalg.norm(np.array(pore_center_of_mass)-np.array(i.pos))
     if dist1 == 0:
@@ -125,7 +122,7 @@ for i in calculatedGird.grid:
                     vect2Norm = (np.array(atom_pos)-np.array(i.pos)) / dist2
                     angle = np.arccos(np.dot(vect1Norm, vect2Norm))
                     summAngles.append(angle)
-                    distancesAngles.append(1/dist2)
+                    distancesAngles.append(1/(1+dist2))
         if (summAngles):
             averageSummAngles = np.average(summAngles, axis=None, weights=distancesAngles)
             averageSummAngles_deg = np.degrees(averageSummAngles)
@@ -135,14 +132,14 @@ for i in calculatedGird.grid:
                     i.inside_cavity = 1
 
 
-# Create a KDThree of the dummy atoms
+# Create a KDThree of the cavity dummy atoms
 calculatedGirdContacts = []
 for i in calculatedGird.grid:
     if i.inside_cavity == 1:
-        calculatedGirdContacts.append(i.pos) 
+        calculatedGirdContacts.append(i.pos)
 calculatedGirdContactsKDTree = KDTree(calculatedGirdContacts, leafsize = 20)
 
-# Calculate the numer of neighbors for each dummy atom. From 1 to 7 (as 1 contact is always, the atom itself)
+# Calculate the number of neighbors for each dummy atom. From 1 to 7 (as 1 contact is always, the atom itself)
 for i, dummy_atom in enumerate(calculatedGird.grid):
     if dummy_atom.inside_cavity == 1:
         xyzDummySet = calculatedGirdContactsKDTree.query(dummy_atom.pos, k=None, p=2, distance_upper_bound=1.1*grid_spacing)
