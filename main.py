@@ -11,7 +11,8 @@ import time
 from scipy.spatial import KDTree
 
 from hydrophobicity_values import hydrophValues
-from calculations import cavity_volume
+from calculations import cavity_volume, assignHydrophobicValuesToCageAtoms
+from cavity_classes import GridPoint, CageGrid
 
 ########## cavity calculation
 cageMOL = "cage_ACIE_2006_45_901.mol2" #we need mol files as pdb file was not behaving OK with the aromatic
@@ -51,48 +52,7 @@ center_of_mass = np.array(sum(atoms[i].GetMass()*xyzPositionArray[i] for i in ra
 print("center_of_mass= ", center_of_mass)
 
 # Assign the hydrophobic values to cage atoms from the library
-listGlobalOut = list()
-listGlobalOut2 = list() 
-for i in hydrophValues:
-    match = rdkit_cage.GetSubstructMatches(Chem.MolFromSmarts(hydrophValues[i][1]),False,False)
-    listOut = list()
-    for x in match:
-        listOut.append(x[0]+1)
-    listGlobalOut2.append(list(set(listOut)))
-    if listOut:
-        listGlobalOut.extend(list(set(listOut)))
-
-numberOfAtoms = rdkit_cage.GetNumAtoms()
-
-atomTypesList = []
-for i in range(0,numberOfAtoms):
-    atomTypesList.append([])
-
-atomTypesListHydrophValues = []
-for i in range(0,numberOfAtoms):
-    atomTypesListHydrophValues.append([])
-
-atomTypesMeanListHydrophValues = []
-
-for i in range(0, len(listGlobalOut2)):
-    if listGlobalOut2[i]:
-        for j in listGlobalOut2[i]:          
-            atomTypesList[j-1].append(i+1)
-
-for i in range(0,numberOfAtoms):
-    atomSymbol = rdkit_cage.GetAtomWithIdx(i).GetSymbol()
-    valuesList = []
-    if len(atomTypesList[i])>0:
-        valuesList = []
-        for j in atomTypesList[i]:
-            valuesList.append(hydrophValues[j][2])
-    
-    atomTypesListHydrophValues.append(valuesList)
-    meanValuestList = np.mean(valuesList)
-    atomTypesMeanListHydrophValues.append(meanValuestList)
-    if (printLevel == 2): print(atomSymbol, i+1, atomTypesList[i], valuesList, meanValuestList)
-
-
+atomTypesMeanListHydrophValues = assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel)
 
 # Get cage xyx atom coordinates
 xyzAtoms = np.array([rdkit_cage.GetConformer().GetAtomPosition(cage_atom.GetIdx()) for cage_atom in rdkit_cage.GetAtoms()], dtype=np.float64)
@@ -105,49 +65,6 @@ pore_center_of_mass = center_of_mass
 distancesFromCOM = kdtxyzAtoms.query(center_of_mass, k = None, p = 2)
 maxDistanceFromCOM = (distancesFromCOM[0][-1])
 pore_radius = distancesFromCOM[0][0]*distanceFromCOMFactor
-
-class GridPoint:
-    def __init__(self, i, j, k, points, center, grid_spacing):
-        self.i = i
-        self.j = j
-        self.k = k     
-        
-        self.i_from_center = i - points
-        self.j_from_center = j - points
-        self.k_from_center = k - points
-        
-        self.x = self.i_from_center * grid_spacing + center[0]
-        self.y = self.j_from_center * grid_spacing + center[1]
-        self.z = self.k_from_center * grid_spacing + center[2]
-        
-        self.pos = [self.x, self.y, self.z]
-        
-        self.d_from_center = np.linalg.norm( np.array(self.pos) -  np.array(center) )
-        
-        self.inside_cavity = 0
-        
-        self.overlapping_with_cage = 0
-        
-        self.number_of_neighbors = 0
-        
-        self.is_window = 0
-        
-        self.vector_angle = 0
-        
-        self.neighbors = []
-
-class CageGrid:
-    def __init__(self, center, radius, delta, grid_spacing):
-        self.center = center
-        self.size = radius + delta
-        self.grid_spacing = grid_spacing
-        self.points = math.ceil(self.size / self.grid_spacing)
-        self.n = 2*self.points + 1  
-        self.grid = [GridPoint(i,j,k, self.points, self.center, self.grid_spacing) for k in range(self.n) for j in range(self.n) for i in range(self.n)]
-        self.grid = np.array(self.grid)
-        self.gridPosList = []
-        for i in self.grid:
-            self.gridPosList.append(i.pos)
 
 
 box_size = maxDistanceFromCOM
@@ -245,7 +162,7 @@ for i in calculatedGird.grid:
             i.overlapping_with_cage = 0
 '''
 
-#Create an empty editable molecule in RDKit
+#Create an empty editable molecule in RDKit, store bfactor data then save as PDB
 rdkit_molRW = rdkit.RWMol()
 rdkit_conf = rdkit.Conformer(1)
 
@@ -293,6 +210,7 @@ rdkit.MolToPDBFile(rdkit_molRW, cagePDBout1)
 #print("Saving MOL file with the dummy cavity atoms")
 #rdkit.MolToMolFile(rdkit_molRW, cageMOLout1)
 
+#Calculate the volume of the cavity, print and save
 if len(rdkit_molRW.GetAtoms()) >0:
     ##Calculation of the volume of the cavity using RDKit
     #cageCavityVolume = rdkit.ComputeMolVolume(rdkit_molRW, confId=-1, gridSpacing=0.2, boxMargin=2.0)

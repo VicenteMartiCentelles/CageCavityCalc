@@ -1,5 +1,6 @@
 import numpy as np
 import MDAnalysis
+from rdkit import Chem
 
 def cavity_volume(positions,radius=1.2, volume_grid_size=0.2):
     """
@@ -19,3 +20,49 @@ def cavity_volume(positions,radius=1.2, volume_grid_size=0.2):
     dist_matrix = MDAnalysis.lib.distances.distance_array(positions, grid_points)
     # if grid point within radius of position then we add volume of the grid
     return np.sum(np.sum(dist_matrix<radius,axis=0)>0)*(volume_grid_size**3)
+    
+    
+# Assign the hydrophobic values to cage atoms from the library
+def assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel = 2):
+    listGlobalOut = list()
+    listGlobalOut2 = list() 
+    for i in hydrophValues:
+        match = rdkit_cage.GetSubstructMatches(Chem.MolFromSmarts(hydrophValues[i][1]),False,False)
+        listOut = list()
+        for x in match:
+            listOut.append(x[0]+1)
+        listGlobalOut2.append(list(set(listOut)))
+        if listOut:
+            listGlobalOut.extend(list(set(listOut)))
+
+    numberOfAtoms = rdkit_cage.GetNumAtoms()
+
+    atomTypesList = []
+    for i in range(0,numberOfAtoms):
+        atomTypesList.append([])
+
+    atomTypesListHydrophValues = []
+    for i in range(0,numberOfAtoms):
+        atomTypesListHydrophValues.append([])
+
+    atomTypesMeanListHydrophValues = []
+
+    for i in range(0, len(listGlobalOut2)):
+        if listGlobalOut2[i]:
+            for j in listGlobalOut2[i]:          
+                atomTypesList[j-1].append(i+1)
+
+    for i in range(0,numberOfAtoms):
+        atomSymbol = rdkit_cage.GetAtomWithIdx(i).GetSymbol()
+        valuesList = []
+        if len(atomTypesList[i])>0:
+            valuesList = []
+            for j in atomTypesList[i]:
+                valuesList.append(hydrophValues[j][2])
+        
+        atomTypesListHydrophValues.append(valuesList)
+        meanValuestList = np.mean(valuesList)
+        atomTypesMeanListHydrophValues.append(meanValuestList)
+        if (printLevel == 2): print(atomSymbol, i+1, atomTypesList[i], valuesList, meanValuestList)
+    
+    return atomTypesMeanListHydrophValues
