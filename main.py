@@ -71,6 +71,31 @@ print("Box z min/max= ", box_size[4], box_size[5])
 
 calculatedGird = CageGrid(pore_center_of_mass, box_size, delta = 0, grid_spacing = grid_spacing)
 
+if(printLevel == 2):
+    #Create an empty editable molecule in RDKit, to save the dummy atom box
+    rdkit_molRW = rdkit.RWMol()
+    rdkit_conf = rdkit.Conformer(1)
+
+    for i, dummy_atom in enumerate(calculatedGird.grid):
+        #Add atom to the RDKit molecule
+        indexNewAtom = rdkit_molRW.AddAtom(rdkit.Atom(1))            
+        rdkit_conf.SetAtomPosition(indexNewAtom,Point3D(dummy_atom.x,dummy_atom.y,dummy_atom.z)) #Set xyz postion
+        molecInfo = rdkit.AtomPDBResidueInfo()            
+        molecInfo.SetName(' D') # the rdkit PDB name has incorrect whitespace
+        molecInfo.SetResidueName('HOH')            
+        molecInfo.SetResidueName(''.ljust(2-len('D'))+'HOH') # the rdkit PDB residue name has incorrect whitespace
+        molecInfo.SetResidueNumber(indexNewAtom+1)
+        molecInfo.SetIsHeteroAtom(False)
+        molecInfo.SetOccupancy(1.0)
+        molecInfo.SetTempFactor(1.0)
+        rdkit_molRW.GetAtomWithIdx(indexNewAtom).SetMonomerInfo(molecInfo)
+
+    rdkit_molRW.AddConformer(rdkit_conf, assignId=True)
+
+    print("Saving PDB file with the box of dummy cavity atoms")
+    rdkit.MolToPDBFile(rdkit_molRW, cagePDB.replace(".pdb", "_box_cavity.pdb"))
+
+
 #Create a KDTree for each atom type and store in a dict
 atom_type_list = []
 coords_dict = {}
@@ -253,6 +278,8 @@ cmd = pymol.cmd
 cmd.load(cagePDB, "cage")
 cmd.set('valence', 0)
 cmd.load(cagePDBout1, "cavity")
+if(printLevel == 2):
+    cmd.load(cagePDB.replace(".pdb", "_box_cavity.pdb"), "box")
 
 cmd.alter('name D', 'vdw="' + str(dummy_atom_radii) + '"')
 

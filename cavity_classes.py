@@ -31,9 +31,9 @@ class GridPoint:
             self.j = j
             self.k = k     
             
-            self.i_from_center = i - points[0]
-            self.j_from_center = j - points[1]
-            self.k_from_center = k - points[2]
+            self.i_from_center = i - ((points[0]-1)/2)
+            self.j_from_center = j - ((points[1]-1)/2)
+            self.k_from_center = k - ((points[2]-1)/2)
             
             self.x = self.i_from_center * grid_spacing + center[0]
             self.y = self.j_from_center * grid_spacing + center[1]
@@ -74,14 +74,11 @@ class CageGrid:
             self.size_z_min = box_size[4]
             self.size_z_max = box_size[5]
             self.grid_spacing = grid_spacing
-            self.points_x = math.ceil((self.size_x_max-self.size_x_min + delta) / self.grid_spacing)
-            self.points_y = math.ceil((self.size_y_max-self.size_y_min + delta) / self.grid_spacing)
-            self.points_z = math.ceil((self.size_z_max-self.size_z_min + delta) / self.grid_spacing)
-            self.points = [self.points_x,self.points_z,self.points_z]
-            self.n_x = 2*self.points_x + 1  
-            self.n_y = 2*self.points_y + 1
-            self.n_z = 2*self.points_z + 1
-            self.grid = [GridPoint(i,j,k, self.points, self.center, self.grid_spacing) for k in range(self.n_z) for j in range(self.n_y) for i in range(self.n_x)]
+            self.points_x = math.ceil((self.size_x_max-self.size_x_min + delta) / self.grid_spacing)+1
+            self.points_y = math.ceil((self.size_y_max-self.size_y_min + delta) / self.grid_spacing)+1
+            self.points_z = math.ceil((self.size_z_max-self.size_z_min + delta) / self.grid_spacing)+1
+            self.points = [self.points_x,self.points_y,self.points_z]
+            self.grid = [GridPoint(i,j,k, self.points, self.center, self.grid_spacing) for k in range(self.points_z) for j in range(self.points_y) for i in range(self.points_x)]
             self.grid = np.array(self.grid)
             self.gridPosList = []
             for i in self.grid:
