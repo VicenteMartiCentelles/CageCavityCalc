@@ -21,7 +21,8 @@ grid_spacing = 3
 distance_threshold_for_90_deg_angle = 7
 calculate_bfactor = True
 compute_aromatic_contacts = False
-compute_atom_contacts = True
+compute_hydrophobicity = True
+distance_function = "Audry" #Audry, Fauchere, Fauchere2 // Distance function of the hydrophobic potential
 distThreshold_atom_contacts = 5.0
 dummy_atom_radii = 3
 distanceFromCOMFactor = 0.0 #Distance from the center of mass factor 0-1 to consider spherical cavity, only useful for large cavities
@@ -199,8 +200,13 @@ for i, dummy_atom in enumerate(calculatedGird.grid):
 
                     if dist[0]:
                         for k in range (0, len(dist[0])):
-                            if compute_atom_contacts == True:
-                                bfactor_info.append(atomTypesMeanListHydrophValues[dist[1][k]]/(1+dist[0][k]))
+                            if compute_hydrophobicity == True:
+                                if distance_function == "Audry": 
+                                    bfactor_info.append(atomTypesMeanListHydrophValues[dist[1][k]]/(1+dist[0][k]))
+                                elif distance_function == "Fauchere":
+                                    bfactor_info.append(atomTypesMeanListHydrophValues[dist[1][k]]*np.exp(-1*dist[0][k]))
+                                elif distance_function == "Fauchere2":
+                                    bfactor_info.append(atomTypesMeanListHydrophValues[dist[1][k]]*np.exp(-1/2*dist[0][k]))
                             elif compute_aromatic_contacts == True:
                                 isAromatic = rdkit_cage.GetAtomWithIdx(atom_idx_dict[atom_type][dist[1][k]]).GetIsAromatic()
                                 if isAromatic == True:
@@ -286,13 +292,14 @@ cmd.alter('name D', 'vdw="' + str(dummy_atom_radii) + '"')
 #cmd.show_as("nonbonded", selection="cavity")
 #cmd.show_as("surface", selection="cavity")
 cmd.show_as("spheres", selection="cavity")
-cmd.show_as("spheres", selection="cage")
+#cmd.show_as("spheres", selection="cage")
 
-cmd.spectrum("b", selection="cavity")
+cmd.spectrum("b", selection="cavity",palette="blue_white_red",minimum=min(hydrophobicity_cavity_dummy_atoms), maximum=max(hydrophobicity_cavity_dummy_atoms))
 #cmd.set("surface_color", "withe", selection="cavity")
 #cmd.set("transparency", 0.5, cage_name)
 
-cmd.ramp_new("ramp", "cavity", [min(hydrophobicity_cavity_dummy_atoms),max(hydrophobicity_cavity_dummy_atoms)], "rainbow")
+cmd.ramp_new("ramp", "cavity", [min(hydrophobicity_cavity_dummy_atoms),(min(hydrophobicity_cavity_dummy_atoms)+max(hydrophobicity_cavity_dummy_atoms))/2,max(hydrophobicity_cavity_dummy_atoms)], ["blue","white","red"] )
+cmd.recolor()
 
 
 cmd.clip("atoms", 5, "All")
