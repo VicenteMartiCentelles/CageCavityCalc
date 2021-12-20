@@ -17,14 +17,14 @@ from cavity_classes import GridPoint, CageGrid
 ########## cavity calculation
 cageMOL = "cage_ACIE_2006_45_901.mol2" #we need mol files as pdb file was not behaving OK with the aromatic
 
-grid_spacing = 3
+grid_spacing = 1.2
 distance_threshold_for_90_deg_angle = 7
 calculate_bfactor = True
 compute_aromatic_contacts = False
 compute_hydrophobicity = True
 distance_function = "Audry" #Audry, Fauchere, Fauchere2 // Distance function of the hydrophobic potential
 distThreshold_atom_contacts = 5.0
-dummy_atom_radii = 3
+dummy_atom_radii = 1.2
 distanceFromCOMFactor = 0.0 #Distance from the center of mass factor 0-1 to consider spherical cavity, only useful for large cavities
 
 threads_KDThree = 4

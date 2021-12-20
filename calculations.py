@@ -59,6 +59,9 @@ def assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel = 2
             valuesList = []
             for j in atomTypesList[i]:
                 valuesList.append(hydrophValues[j][2])
+        else:
+            valuesList.append(0)
+            print("WARNING: atom ", atomSymbol, i+1, "not found. Assinged 0 as hydropobicity factor.")
         
         atomTypesListHydrophValues.append(valuesList)
         meanValuestList = np.mean(valuesList)
