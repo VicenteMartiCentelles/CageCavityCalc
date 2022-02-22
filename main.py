@@ -15,21 +15,23 @@ from calculations import cavity_volume, assignHydrophobicValuesToCageAtoms
 from cavity_classes import GridPoint, CageGrid
 
 ########## cavity calculation
-cageMOL = "cage_ACIE_2006_45_901.mol2" #we need mol files as pdb file was not behaving OK with the aromatic
+cageMOL = "test.mol2" #we need mol files as pdb file was not behaving OK with the aromatic  
+os.chdir("./test")
+print("Current Working Directory " , os.getcwd())
 
-grid_spacing = 1.2
-distance_threshold_for_90_deg_angle = 7
+grid_spacing = 1.4/3
+distance_threshold_for_90_deg_angle = 5
 calculate_bfactor = True
 compute_aromatic_contacts = False
 compute_hydrophobicity = True
-distance_function = "Audry" #Audry, Fauchere, Fauchere2 // Distance function of the hydrophobic potential
-distThreshold_atom_contacts = 5.0
-dummy_atom_radii = 1.2
+distance_function = "OnlyValues" #Audry, Fauchere, Fauchere2 // Distance function of the hydrophobic potential, OnlyValues to do not consider the distance (only used for testing purpouses)
+distThreshold_atom_contacts = 7.0
+dummy_atom_radii = 1.4/3
 distanceFromCOMFactor = 0.0 #Distance from the center of mass factor 0-1 to consider spherical cavity, only useful for large cavities
 
 threads_KDThree = 4
 
-printLevel = 1 #print level 1 = normal print, print level 2 = print all info
+printLevel = 2 #print level 1 = normal print, print level 2 = print all info
 
 
 ######################################################################
@@ -60,7 +62,31 @@ maxDistanceFromCOM = (distancesFromCOM[0][-1])
 pore_radius = distancesFromCOM[0][0]*distanceFromCOMFactor
 
 # Assign the hydrophobic values to cage atoms from the library
-atomTypesMeanListHydrophValues = assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel)
+atomTypesMeanListHydrophValues, atomTypesValuesListHydrophValues, atomTypesInfoAtomSymbol, atomTypesInfoAtomGlobalIndex, atomTypesAssignemet = assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel)
+
+atom_symbols_in_molecule = []
+for atom_symbol in atomTypesInfoAtomSymbol:
+    if atom_symbol not in atom_symbols_in_molecule:
+        atom_symbols_in_molecule.append(atom_symbol)
+
+atomTypes_HydrophValues_dict = {}
+for j, atom_type in enumerate(atom_symbols_in_molecule):
+    k = 1
+    atomTypes_dict = {}
+    for i, atom_symbol in enumerate(atomTypesInfoAtomSymbol):
+        if atom_type == atom_symbol: 
+            atomTypes_dict[k] = i + 1
+            k = k + 1
+    atomTypes_HydrophValues_dict[atom_type] = atomTypes_dict
+
+print(atomTypes_HydrophValues_dict)
+
+if (printLevel == 2): 
+    fileExtraData = open(cagePDB.replace(".pdb", "_extra_data.txt"),"w+")
+    fileExtraData.write("Asignement of hydrophobic values to cage atoms from tables\n")
+    for i, atom_symbol in enumerate(atomTypesInfoAtomSymbol):
+        fileExtraData.write( str(atom_symbol) + str(i+1)+ " Atom type:" + str(atomTypesAssignemet[i]) + str(atomTypesValuesListHydrophValues[i]) + str(atomTypesMeanListHydrophValues[i]) + "\n")
+    fileExtraData.write("*****************\n\n")
 
 # Calculate the cage bounding box using the x,y,z axis
 #box_size = maxDistanceFromCOM ## Not used, in this previous version we used a square box
@@ -189,24 +215,33 @@ for i in calculatedGird.grid:
 rdkit_molRW = rdkit.RWMol()
 rdkit_conf = rdkit.Conformer(1)
 
+
 for i, dummy_atom in enumerate(calculatedGird.grid):
     if (dummy_atom.inside_cavity == 1 and dummy_atom.overlapping_with_cage == 0):
         # Remove isolated dummy atoms that only have one neighbors 
         if ( dummy_atom.number_of_neighbors > 1):
             if calculate_bfactor == True:
-                bfactor_info = []                
+                bfactor_info = []
+                if (printLevel == 2): fileExtraData.write( "-------------\n" )
                 for atom_type in atom_type_list:
                     dist = KDTree_dict[atom_type].query(dummy_atom.pos, k = None, p = 2, distance_upper_bound = distThreshold_atom_contacts, workers = threads_KDThree)
+                    if (printLevel == 2):
+                        fileExtraData.write( str(atom_type) + ": " + str(dist[0]) + "\n" )
+                        fileExtraData.write( str(atom_type) + " Index: "+ str([x+1 for x in dist[1]]) + "\n" )# Add 1 to key as atom number starts with 1 and list number with 0
+                        fileExtraData.write( "Global Index: " + str([atomTypes_HydrophValues_dict[atom_type].get(key+1) for key in dist[1]]) + "\n" ) # Add 1 to key as atom number starts with 1 and list number with 0
 
                     if dist[0]:
                         for k in range (0, len(dist[0])):
+                            Hydroph_Value = atomTypesMeanListHydrophValues[atomTypes_HydrophValues_dict[atom_type][1+dist[1][k]] -1 ] # we need to add +1 to the k index as atom numbering is starts at 1 and lists index at 0. After taht, we need to add -1 to the atom index from the dict to obtain the value from the list that starts from 0
                             if compute_hydrophobicity == True:
                                 if distance_function == "Audry": 
-                                    bfactor_info.append(atomTypesMeanListHydrophValues[dist[1][k]]/(1+dist[0][k]))
+                                    bfactor_info.append(Hydroph_Value/(1+dist[0][k]))
                                 elif distance_function == "Fauchere":
-                                    bfactor_info.append(atomTypesMeanListHydrophValues[dist[1][k]]*np.exp(-1*dist[0][k]))
+                                    bfactor_info.append(Hydroph_Value*np.exp(-1*dist[0][k]))
                                 elif distance_function == "Fauchere2":
-                                    bfactor_info.append(atomTypesMeanListHydrophValues[dist[1][k]]*np.exp(-1/2*dist[0][k]))
+                                    bfactor_info.append(Hydroph_Value*np.exp(-1/2*dist[0][k]))
+                                elif distance_function == "OnlyValues":
+                                    bfactor_info.append( Hydroph_Value ) 
                             elif compute_aromatic_contacts == True:
                                 isAromatic = rdkit_cage.GetAtomWithIdx(atom_idx_dict[atom_type][dist[1][k]]).GetIsAromatic()
                                 if isAromatic == True:
@@ -224,6 +259,9 @@ for i, dummy_atom in enumerate(calculatedGird.grid):
             molecInfo.SetOccupancy(1.0)
             if calculate_bfactor == True:
                 molecInfo.SetTempFactor( sum(bfactor_info) )  #Set the b-factor value
+                if (printLevel == 2):                    
+                    fileExtraData.write( "Dummy atom index = " + str(indexNewAtom+1) + "\n" )
+                    fileExtraData.write( "Sum Hydrop. =" + str(sum(bfactor_info)) + " Individual = " + str(bfactor_info)+ "\n" )
             else:
                 molecInfo.SetTempFactor( 0 )
             #molecInfo.SetTempFactor(dummy_atom.inside_cavity)
@@ -232,6 +270,7 @@ for i, dummy_atom in enumerate(calculatedGird.grid):
 
 rdkit_molRW.AddConformer(rdkit_conf, assignId=True)
 
+if (printLevel == 2): fileExtraData.close()
 
 print("Saving PDB file with the dummy cavity atoms")
 rdkit.MolToPDBFile(rdkit_molRW, cagePDBout1)
@@ -262,7 +301,7 @@ if len(rdkit_molRW.GetAtoms()) >0:
     cage_name = cagePDB.replace(".pdb", "")
     file1 = open(cage_name+"_cavity_vol_calc.txt","w+")
     file1.write("Cage cavity volume = " + str(cageCavityVolume) + " A3\n")
-    file1.write("Average cavity hydrophobicity = " + str(total_cavity_hydrophobicity) + "\n")
+    file1.write("Average cavity hydrophobicity = " + str(average_cavity_hydrophobicity) + "\n")
     file1.write("Total cavity hydrophobicity = " + str(total_cavity_hydrophobicity) + " A^-3\n")
     file1.close()
 else:
@@ -281,7 +320,7 @@ import pymol
 pymol.pymol_argv = ['pymol','-q']
 pymol.finish_launching()
 cmd = pymol.cmd
-cmd.load(cagePDB, "cage")
+cmd.load(cageMOL, "cage")
 cmd.set('valence', 0)
 cmd.load(cagePDBout1, "cavity")
 if(printLevel == 2):

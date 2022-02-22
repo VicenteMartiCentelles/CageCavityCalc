@@ -45,7 +45,11 @@ def assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel = 2
     for i in range(0,numberOfAtoms):
         atomTypesListHydrophValues.append([])
 
+    atomTypesValuesListHydrophValues = []
     atomTypesMeanListHydrophValues = []
+    atomTypesInfoAtomSymbol = []
+    atomTypesInfoAtomGlobalIndex = []
+    atomTypesAssignemet = []
 
     for i in range(0, len(listGlobalOut2)):
         if listGlobalOut2[i]:
@@ -66,6 +70,10 @@ def assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel = 2
         atomTypesListHydrophValues.append(valuesList)
         meanValuestList = np.mean(valuesList)
         atomTypesMeanListHydrophValues.append(meanValuestList)
+        atomTypesValuesListHydrophValues.append(valuesList)
+        atomTypesInfoAtomSymbol.append(atomSymbol)
+        atomTypesInfoAtomGlobalIndex.append(i+1)
+        atomTypesAssignemet.append(atomTypesList[i])
         if (printLevel == 2): print(atomSymbol, i+1, atomTypesList[i], valuesList, meanValuestList)
     
-    return atomTypesMeanListHydrophValues
+    return atomTypesMeanListHydrophValues, atomTypesValuesListHydrophValues, atomTypesInfoAtomSymbol, atomTypesInfoAtomGlobalIndex, atomTypesAssignemet
