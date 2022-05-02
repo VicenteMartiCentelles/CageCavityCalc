@@ -10,7 +10,7 @@ import math
 import time
 from scipy.spatial import KDTree
 
-from hydrophobicity_values import hydrophValues
+from hydrophobicity_values import hydrophValuesGhose1998, hydrophValuesCrippen1999
 from calculations import cavity_volume, assignHydrophobicValuesToCageAtoms
 from cavity_classes import GridPoint, CageGrid
 
@@ -19,20 +19,23 @@ cageMOL = "test.mol2" #we need mol files as pdb file was not behaving OK with th
 os.chdir("./test")
 print("Current Working Directory " , os.getcwd())
 
-grid_spacing = 1.4/3
-distance_threshold_for_90_deg_angle = 5
+grid_spacing = 1
+distance_threshold_for_90_deg_angle = 7
 calculate_bfactor = True
 compute_aromatic_contacts = False
 compute_hydrophobicity = True
-distance_function = "OnlyValues" #Audry, Fauchere, Fauchere2 // Distance function of the hydrophobic potential, OnlyValues to do not consider the distance (only used for testing purpouses)
-distThreshold_atom_contacts = 7.0
-dummy_atom_radii = 1.4/3
-distanceFromCOMFactor = 0.0 #Distance from the center of mass factor 0-1 to consider spherical cavity, only useful for large cavities
+distance_function = "Fauchere" #Audry, Fauchere, Fauchere2 // Distance function of the hydrophobic potential, OnlyValues to do not consider the distance (only used for testing purpouses)
+distThreshold_atom_contacts = 20.0
+dummy_atom_radii = 1
+distanceFromCOMFactor = 0.4 #Distance from the center of mass factor 0-1 to consider spherical cavity, only useful for large cavities
 
 threads_KDThree = 4
 
-printLevel = 2 #print level 1 = normal print, print level 2 = print all info
+printLevel = 1 #print level 1 = normal print, print level 2 = print all info
 
+
+#hydrophValues = hydrophValuesGhose1998
+hydrophValues = hydrophValuesCrippen1999
 
 ######################################################################
 ###   Calculate cavity
@@ -285,7 +288,8 @@ if len(rdkit_molRW.GetAtoms()) >0:
     
     xyzPositionArrayMolRW =  np.array([list( rdkit_molRW.GetConformer().GetAtomPosition(i) ) for i in range(rdkit_molRW.GetNumAtoms())])
     
-    cageCavityVolume = cavity_volume(xyzPositionArrayMolRW, radius=dummy_atom_radii, volume_grid_size=0.2)
+    cageCavityVolume = cavity_volume(xyzPositionArrayMolRW, radius=dummy_atom_radii, volume_grid_size=
+grid_spacing/2)
     
     print("Cage cavity volume = ", cageCavityVolume, " A3")
     
@@ -301,8 +305,8 @@ if len(rdkit_molRW.GetAtoms()) >0:
     cage_name = cagePDB.replace(".pdb", "")
     file1 = open(cage_name+"_cavity_vol_calc.txt","w+")
     file1.write("Cage cavity volume = " + str(cageCavityVolume) + " A3\n")
-    file1.write("Average cavity hydrophobicity = " + str(average_cavity_hydrophobicity) + "\n")
-    file1.write("Total cavity hydrophobicity = " + str(total_cavity_hydrophobicity) + " A^-3\n")
+    file1.write("Average cavity hydrophobicity = " + str(average_cavity_hydrophobicity) + " A^-3\n")
+    file1.write("Total cavity hydrophobicity = " + str(total_cavity_hydrophobicity) + "\n")
     file1.close()
 else:
     print("Cavity with no volume")
