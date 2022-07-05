@@ -2,7 +2,7 @@ import numpy as np
 import MDAnalysis
 from rdkit import Chem
 
-def cavity_volume(positions,radius=1.2, volume_grid_size=0.2):
+def sum_grid_volume(positions,radius=1.2, volume_grid_size=0.2):
     """
     Calculate the volume of a cavity
     positions: position
