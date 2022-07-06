@@ -15,7 +15,7 @@ from calculations import sum_grid_volume, assignHydrophobicValuesToCageAtoms
 from cavity_classes import GridPoint, CageGrid
 
 
-from input_output import read_positions_and_atom_names_from_file
+from input_output import read_positions_and_atom_names_from_file, print_to_file
 #from old.cavity_calculator_v08 import cagePDB
 
 
@@ -45,12 +45,13 @@ class cavity():
 
         # proporties of the loaded cage:
         self.positions = None
-        self.atom_names = None # TODO is this redundant (?)
+        self.atom_names = None
         self.atom_masses = None
         self.atom_vdw = None
         self.n_atoms = 0
 
         self.dummy_atoms_positions = []
+        self.dummy_atoms_temperature = None
 
         #self.hydrophobicity = hydrophobicity
 
@@ -82,8 +83,11 @@ class cavity():
             return self.volume
 
     def calculate_volume(self):
+
         print("\n--- Calculation of the cavity ---")
+
         # TODO check the volume and check if positions ant atoms names not empty
+
         start_time = time.time()
 
         pore_center_of_mass, pore_radius = self.calculate_center_and_radius()
@@ -352,13 +356,6 @@ class cavity():
     def sum_up_volume(self):
         #Calculate the volume of the cavity, print and save
         if len(self.dummy_atoms_positions) >0:
-            ##Calculation of the volume of the cavity using RDKit
-            #cageCavityVolume = rdkit.ComputeMolVolume(rdkit_molRW, confId=-1, gridSpacing=0.2, boxMargin=2.0)
-            #print("Cage cavity volume (rdkit calc.) = ", cageCavityVolume, " A3")
-            '''
-            xyzPositionArrayMolRW =  np.array([list(rdkit_molRW.GetConformer().GetAtomPosition(i) ) for i in range(rdkit_molRW.GetNumAtoms())])
-            '''
-
             cageCavityVolume = sum_grid_volume(np.array(self.dummy_atoms_positions),
                                                radius=self.dummy_atom_radii,
                                                volume_grid_size=self.grid_spacing/2)
@@ -386,6 +383,24 @@ class cavity():
 
         else:
             print("Cavity with no volume")
+
+    #def to_pdb_file(self):
+
+    def print_to_file(self, filename): #TODO check if cavity
+        if len(self.dummy_atoms_positions)==0:
+            print("No cavity, saving just the input!") #TODO
+            print_to_file(filename, self.positions, self.atom_names)
+        else:
+            positions = np.vstack([self.positions, self.dummy_atoms_positions])
+            #positions2 = np.hstack([self.positions, self.dummy_atoms_positions])
+
+            atom_names = np.append(self.atom_names, np.array(['D']*len(self.dummy_atoms_positions)))
+            print_to_file(filename, positions, atom_names)
+
+
+
+        #for dummy in self.dummy_atoms_positions:
+
 
 
 
