@@ -115,6 +115,7 @@ class cavity():
 
         self.find_dummies_inside_cavity(calculatedGird, pore_center_of_mass, pore_radius)
         self.volume = self.sum_up_volume()
+        return self.volume
         print(f"--- Total time {(time.time() - start_time):.0f} seconds ---" )
 
     def hydrophobicity(self):
@@ -402,6 +403,25 @@ class cavity():
             atom_names = np.append(self.atom_names, np.array(['D']*len(self.dummy_atoms_positions)))
             print_to_file(filename, positions, atom_names)
 
+import argparse
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", default=None, help="input file (*pdb, *mol2, ...)")
+    parser.add_argument("-o", default="cage_cavity.pdb", help="output file (*pdb, *mol2, ...)")
+    return parser.parse_args()
+
+if __name__ == '__main__':
+    args = get_args()
+
+    if args.f is None:
+        print("input file (-f) is required")
+        exit(0)
+    cav = cavity()
+    cav.read_file(args.f)
+    volume = cav.calculate_volume()
+    cav.print_to_file("cage_cavity.pdb")
+    print("Cage cavity volume = ", volume, " A3")
 
 
 
