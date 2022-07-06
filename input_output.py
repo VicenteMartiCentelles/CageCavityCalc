@@ -2,8 +2,34 @@ import numpy as np
 import re
 from data import atom_mass, vdw_radii
 
-def read_pdb():
-    None
+def atom_names_to_masses(names):
+    atom_masses = []
+    for name in names:
+        atom_masses.append(atom_mass[name])
+    return np.array(atom_masses)
+
+def atom_names_to_vdw(names):
+    atom_vdw_radii = []
+    for name in names:
+        atom_vdw_radii.append(vdw_radii[name])
+    return np.array(atom_vdw_radii)
+
+def read_pdb(filename):
+    positions = []
+    atom_names = []
+    with open(filename) as File:
+        text = File.read()
+        for line in text.splitlines():
+            if line.split()[0] == "HETATM" or line.split()[0] == "ATOM":
+                temp = np.array(list(map(float, line[30:54].split())))
+                positions.append(temp)
+                name_and_number = line[13:16].lower()
+                name_strip_number = re.match('([a-z]+)', name_and_number).group(1)
+                atom_names.append(name_strip_number)
+            elif line.split()[0] == "END":
+                break
+
+    return np.array(positions), atom_names
 
 def read_mol2(filename):
     positions = []
@@ -29,18 +55,6 @@ self.atom_masses = None
 self.atom_vdw = None
 self.n_atoms = 0
 '''
-def atom_names_to_masses(names):
-    atom_masses = []
-    for name in names:
-        atom_masses.append(atom_mass[name])
-    return np.array(atom_masses)
-
-def atom_names_to_vdw(names):
-    atom_vdw_radii = []
-    for name in names:
-        atom_vdw_radii.append(vdw_radii[name])
-    return np.array(atom_vdw_radii)
-
 
 def read_positions_and_atom_names_from_file(filename):
     positions = None
@@ -60,6 +74,8 @@ def print_to_file(filename, positions, atom_names):
         print_to_xyz_file(filename, positions, atom_names)
     elif filename.endswith(".pdb"):
         print_to_pdb_file(filename, positions, atom_names)
+    else:
+        print_to_other_file(filename, positions, atom_names) #TODO
 
 
 def print_to_pdb_file(filename, positions, atom_names):
@@ -71,42 +87,7 @@ def print_to_pdb_file(filename, positions, atom_names):
             else:
                 print(f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CV B   1    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0:6.2f}", file=xyz_file)
     return None
-'''
-print(f"{'ATOM':>5s}{a:>12d}{atom_names[a].upper()+str(a):>7s}{1:>8d}{:>6s}{:>5s}{:>12.6f}{:>11.6f}")
-print("ATOM   {a:>5d}  {atom_names[a]:>4s} CG A    0     {pos[0]:>8.3f}{pos[0]:>8.3f}{pos[0]:>8.3f} {0:6.2f}{0:6.2f}"
-print("ATOM   {a:>5d}  {atom_names[a]:>4s} CV B    1     {pos[0]:>8.3f}{pos[0]:>8.3f}{pos[0]:>8.3f} {0:6.2f}{0:0.2f}"  
 
-ATOM     24  C1  DMSO   78      20.530  14.660  20.390  1.00  0.00
-ATOM    134  H134  CG A  0      -7.407  -7.407  -7.407  0.00  0.00
-ATOM    309  DM2 UNL M   1      10.457  11.039  31.690  0.00  1.00      M    D
-
-ATOM 	1-4	“ATOM”		character
-7-11#	Atom serial number	right	integer
-13-16	Atom name	left*	character
-17	Alternate location indicator		character
-18-20§	Residue name	right	character
-22	Chain identifier		character
-23-26	Residue sequence number	right	integer
-27	Code for insertions of residues		character
-31-38	X orthogonal Å coordinate	right	real (8.3)
-39-46	Y orthogonal Å coordinate	right	real (8.3)
-47-54	Z orthogonal Å coordinate	right	real (8.3)
-55-60	Occupancy	right	real (6.2)
-61-66	Temperature factor	right	real (6.2)
-73-76	Segment identifier¶	left	character
-77-78	Element symbol	right	character
-
-print("{:>5s}{:>12s}{:>7s}{:>8s}{:>6s}{:>5s}{:>12.6f}{:>11.6f}".format(
-    modified_line[0],
-    modified_line[1],
-    modified_line[2],
-    name,
-    modified_line[4],
-    modified_line[5],
-    float(modified_line[6]),
-    float(modified_line[7]),
-),
-'''
 def print_to_xyz_file(filename, positions, atom_names):
     """
     Print a standard .xyz file from a set of atoms
@@ -123,5 +104,44 @@ def print_to_xyz_file(filename, positions, atom_names):
             print(f'{atom_names[a].upper():<3} {pos[0]:^10.5f} {pos[1]:^10.5f} {pos[2]:^10.5f}', file=xyz_file)
     return None
 
+def print_pymol_file(filename):
+    with open(filename, 'w') as file:
+        print("extract 'cavity', name D", file=file)
+        print("hid h.", file=file)
+        print("show_as surface, cavity", file=file)
 
+        ######################################################################
+        ###        Open the saved cavity in PyMol
+        ######################################################################
+        '''
+        # pymol launching: quiet (-q)
+        import pymol
+        pymol.pymol_argv = ['pymol','-q']
+        pymol.finish_launching()
+        cmd = pymol.cmd
+        cmd.load(cageMOL, "cage")
+        cmd.set('valence', 0)
+        cmd.load(cagePDBout1, "cavity")
+        if(printLevel == 2):
+            cmd.load(cagePDB.replace(".pdb", "_box_cavity.pdb"), "box")
 
+        cmd.alter('name D', 'vdw="' + str(dummy_atom_radii) + '"')
+
+        #cmd.show_as("nonbonded", selection="cavity")
+        #cmd.show_as("surface", selection="cavity")
+        cmd.show_as("spheres", selection="cavity")
+        #cmd.show_as("spheres", selection="cage")
+
+        cmd.spectrum("b", selection="cavity",palette="blue_white_red",minimum=min(hydrophobicity_cavity_dummy_atoms), maximum=max(hydrophobicity_cavity_dummy_atoms))
+        #cmd.set("surface_color", "withe", selection="cavity")
+        #cmd.set("transparency", 0.5, cage_name)
+
+        cmd.ramp_new("ramp", "cavity", [min(hydrophobicity_cavity_dummy_atoms),(min(hydrophobicity_cavity_dummy_atoms)+max(hydrophobicity_cavity_dummy_atoms))/2,max(hydrophobicity_cavity_dummy_atoms)], ["blue","white","red"] )
+        cmd.recolor()
+
+        cmd.clip("atoms", 5, "All")
+        cmd.orient("cage")
+        cmd.zoom("cage")
+
+        cmd.save(cagePDBout1.replace(".pdb", ".pse"))
+        '''

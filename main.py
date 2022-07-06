@@ -257,19 +257,6 @@ class cavity():
                 xyzDummySet = calculatedGirdContactsKDTree.query(dummy_atom.pos, k=None, p=2, distance_upper_bound=1.1*self.grid_spacing)
                 dummy_atom.number_of_neighbors = len(xyzDummySet[1])
 
-        '''
-        ##This part of the code can be removed as overlapping with the cage is calculated before
-        # Check the dummy atoms that overlap with the cage
-        for i in calculatedGird.grid:   
-            for atom_type in atom_type_list:
-                vdwR = vdwR_dict[atom_type][0]
-                distThreshold = vdwR + vdwRdummy
-                xyzAtomsSet2 = KDTree_dict[atom_type].query(i.pos, k = None, p = 2, distance_upper_bound = distThreshold, workers = threads_KDThree)
-                if xyzAtomsSet2[0]:
-                    i.overlapping_with_cage = 1
-                else:
-                    i.overlapping_with_cage = 0
-        '''
 
         #Create an empty editable molecule in RDKit, store bfactor data then save as PDB
         '''
@@ -399,44 +386,5 @@ class cavity():
 
 
 
-        #for dummy in self.dummy_atoms_positions:
 
 
-
-
-
-        ######################################################################
-        ###        Open the saved cavity in PyMol
-        ######################################################################
-        '''
-        # pymol launching: quiet (-q)
-        import pymol
-        pymol.pymol_argv = ['pymol','-q']
-        pymol.finish_launching()
-        cmd = pymol.cmd
-        cmd.load(cageMOL, "cage")
-        cmd.set('valence', 0)
-        cmd.load(cagePDBout1, "cavity")
-        if(printLevel == 2):
-            cmd.load(cagePDB.replace(".pdb", "_box_cavity.pdb"), "box")
-        
-        cmd.alter('name D', 'vdw="' + str(dummy_atom_radii) + '"')
-        
-        #cmd.show_as("nonbonded", selection="cavity")
-        #cmd.show_as("surface", selection="cavity")
-        cmd.show_as("spheres", selection="cavity")
-        #cmd.show_as("spheres", selection="cage")
-        
-        cmd.spectrum("b", selection="cavity",palette="blue_white_red",minimum=min(hydrophobicity_cavity_dummy_atoms), maximum=max(hydrophobicity_cavity_dummy_atoms))
-        #cmd.set("surface_color", "withe", selection="cavity")
-        #cmd.set("transparency", 0.5, cage_name)
-        
-        cmd.ramp_new("ramp", "cavity", [min(hydrophobicity_cavity_dummy_atoms),(min(hydrophobicity_cavity_dummy_atoms)+max(hydrophobicity_cavity_dummy_atoms))/2,max(hydrophobicity_cavity_dummy_atoms)], ["blue","white","red"] )
-        cmd.recolor()
-        
-        cmd.clip("atoms", 5, "All")
-        cmd.orient("cage")
-        cmd.zoom("cage")
-        
-        cmd.save(cagePDBout1.replace(".pdb", ".pse"))
-        '''
