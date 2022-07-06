@@ -392,9 +392,9 @@ class cavity():
 
     #def to_pdb_file(self):
 
-    def print_to_file(self, filename): #TODO check if cavity
+    def print_to_file(self, filename):
         if len(self.dummy_atoms_positions)==0:
-            print("No cavity, saving just the input!") #TODO
+            print("No cavity, saving just the input!")
             print_to_file(filename, self.positions, self.atom_names)
         else:
             positions = np.vstack([self.positions, self.dummy_atoms_positions])
