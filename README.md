@@ -11,31 +11,55 @@ cavity_calc.volume()
 ```
 It also alows to visuale it by creating .pse/pdb file with dummy atoms:
 ```
+#TODO
 ```
 You can also calculate hydrophobicity index and visualise it:
 ```
+#TODO
 ```
 
 Also cgbind:
 ```
-import cbind
-cage =  
+from cgbind import Linker, Cage
+linker = Linker(smiles='C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1', arch_name='m2l4')
+cage = Cage(linker, metal='Pd')
 
-cavity_calc = CageCavCalc()
-cavity_calc.read_cgbind(cage)
-cavity_calc.volume()
+from main import cavity
+cav = cavity()
+cav.read_cgbind(cage)
+cav.calculate_volume()
+cav.print_to_file("cage_cavity.pdb")
 ```
 
 And lastly from MDAnalysis:
 ```
 import MDAnalysis
-syst = MDAnalysis.Universe('cage.gro')
-cavity_calc = CageCavCalc()
-cavity_calc.read_mdanalysis(syst)
-cavity_calc.volume()
+syst = MDAnalysis.Universe("cage.gro")
+
+from main import cavity
+cav = cavity()
+cav.read_mdanalysis(syst)
+cav.calculate_volume()
+cav.print_to_file("cage_cavity.pdb")
+```
+
+By MDAnalysis it is possible to calculate trajectory:
+```commandline
+from main import cavity
+cav = cavity()
+
+import MDAnalysis
+syst = MDAnalysis.Universe("short.gro", "short.xtc")
+
+volume = []
+for ts in syst.trajectory:
+    cav.read_mdanalysis(syst)
+    volume.append(cav.calculate_volume())
+
+print(volume)
 ```
 
 From bash:
 ```
-CageCavCalc -f cage.mol2 -hydrophobicity -pymol
+python ../../main.py -f cage.pdb -o cage_cavity.pdb
 ```

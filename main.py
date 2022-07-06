@@ -106,8 +106,9 @@ class cavity():
 
         # TODO check the volume and check if positions ant atoms names not empty
 
-        start_time = time.time()
 
+
+        start_time = time.time()
         pore_center_of_mass, pore_radius = self.calculate_center_and_radius()
 
         calculatedGird = self.set_up_grid(pore_center_of_mass)
