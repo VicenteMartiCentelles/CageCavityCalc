@@ -2,17 +2,36 @@ import numpy as np
 import re
 from data import atom_mass, vdw_radii
 
+
 def atom_names_to_masses(names):
     atom_masses = []
     for name in names:
         atom_masses.append(atom_mass[name])
     return np.array(atom_masses)
 
+
 def atom_names_to_vdw(names):
     atom_vdw_radii = []
     for name in names:
         atom_vdw_radii.append(vdw_radii[name])
     return np.array(atom_vdw_radii)
+
+
+# ----------------- INPUT -------------------------
+
+
+def read_positions_and_atom_names_from_file(filename):
+    positions = None
+    atom_names = None
+    if filename.endswith(".pdb"):
+        positions, atom_names = read_pdb(filename)
+    elif filename.endswith(".mol2"):
+        positions, atom_names = read_mol2(filename)
+    else:
+        positions, atom_names = read_other(filename)  # TODO
+
+    return positions, atom_names, atom_names_to_masses(atom_names), atom_names_to_vdw(atom_names)
+
 
 def read_pdb(filename):
     positions = []
@@ -31,6 +50,7 @@ def read_pdb(filename):
 
     return np.array(positions), atom_names
 
+
 def read_mol2(filename):
     positions = []
     atom_names = []
@@ -48,25 +68,49 @@ def read_mol2(filename):
                 atom_names.append(name_strip_number)
 
     return np.array(positions), atom_names
-'''
-self.positions = None
-self.atom_names = None
-self.atom_masses = None
-self.atom_vdw = None
-self.n_atoms = 0
-'''
 
-def read_positions_and_atom_names_from_file(filename):
-    positions = None
-    atom_names = None
-    if filename.endswith(".pdb"):
-        positions, atom_names = read_pdb(filename)
-    elif filename.endswith(".mol2"):
-        positions, atom_names = read_mol2(filename)
-    else:
-        positions, atom_names = read_other(filename) #TODO
 
-    return positions, atom_names,  atom_names_to_masses(atom_names), atom_names_to_vdw(atom_names)
+def read_other(filename):
+    try:
+        import MDAnalysis
+    except:
+        print("The other formats are supported by MDAnalysis, which has been not found")
+        exit()
+    syst = MDAnalysis.Universe(filename)
+
+    # we take only first two inputs (positions and atoms)
+    return read_mdanalysis(syst)[:2]
+
+
+def read_cgbind(cgbind_cage):
+    try:
+        import cgbind
+    except:
+        print("Could not load cgbind")
+        exit()
+
+    atom_names = [atom.label.lower() for atom in cgbind_cage.atoms]
+    positions = cgbind_cage.get_coords()
+    return np.array(positions), atom_names, atom_names_to_masses(atom_names), atom_names_to_vdw(atom_names)
+
+
+def read_mdanalysis(syst):
+    try:
+        import MDAnalysis
+    except:
+        print("Could not load MDAnalysis")
+        exit()
+
+    atom_names = []
+    for name in syst.atoms.names:
+        name_strip_number = re.match('([a-z]+)', name.lower()).group(1)
+        atom_names.append(name_strip_number)
+    positions = syst.atoms.positions
+
+    return np.array(positions), atom_names, atom_names_to_masses(atom_names), atom_names_to_vdw(atom_names)
+
+
+# ----------------- OUTPUT -------------------------
 
 
 def print_to_file(filename, positions, atom_names):
@@ -75,18 +119,23 @@ def print_to_file(filename, positions, atom_names):
     elif filename.endswith(".pdb"):
         print_to_pdb_file(filename, positions, atom_names)
     else:
-        print_to_other_file(filename, positions, atom_names) #TODO
+        print_to_other_file(filename, positions, atom_names)  # TODO
 
 
 def print_to_pdb_file(filename, positions, atom_names):
     with open(filename, 'w') as xyz_file:
-        #print(len(positions), "CageCavityCalc", sep='\n', file=xyz_file)
+        # print(len(positions), "CageCavityCalc", sep='\n', file=xyz_file)
         for a, pos in enumerate(positions):
-            if atom_names[a]!="D":
-                print(f"ATOM  {a:>5d} {atom_names[a].upper()+str(a):<4s}  CG A   0    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0:6.2f}", file=xyz_file)
+            if atom_names[a] != "D":
+                print(
+                    f"ATOM  {a:>5d} {atom_names[a].upper() + str(a):<4s}  CG A   0    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0:6.2f}",
+                    file=xyz_file)
             else:
-                print(f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CV B   1    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0:6.2f}", file=xyz_file)
+                print(
+                    f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CV B   1    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0:6.2f}",
+                    file=xyz_file)
     return None
+
 
 def print_to_xyz_file(filename, positions, atom_names):
     """
@@ -103,6 +152,30 @@ def print_to_xyz_file(filename, positions, atom_names):
         for a, pos in enumerate(positions):
             print(f'{atom_names[a].upper():<3} {pos[0]:^10.5f} {pos[1]:^10.5f} {pos[2]:^10.5f}', file=xyz_file)
     return None
+
+
+def print_to_other_file(filename, positions, atom_names):
+    try:
+        import MDAnalysis
+    except:
+        print("The other formats are supported by MDAnalysis, which has been not found")
+        exit()
+
+    n_atoms = len(positions)
+    new_universe = MDAnalysis.Universe.empty(n_atoms, n_residues=n_atoms, atom_resindex=[0] * n_atoms,
+                                               residue_segindex=[0] * n_atoms, trajectory=True)
+    new_universe.add_TopologyAttr('tempfactors')
+
+    # we put dummies far away from cage:
+    new_universe.atoms.positions = positions
+    new_universe.add_TopologyAttr('name', atom_names)
+    new_universe.add_TopologyAttr('resname', atom_names)
+    new_universe.atoms.write(filename)
+    return None
+
+
+
+
 
 def print_pymol_file(filename):
     with open(filename, 'w') as file:

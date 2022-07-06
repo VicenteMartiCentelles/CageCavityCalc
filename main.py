@@ -15,7 +15,7 @@ from calculations import sum_grid_volume, assignHydrophobicValuesToCageAtoms
 from cavity_classes import GridPoint, CageGrid
 
 
-from input_output import read_positions_and_atom_names_from_file, print_to_file
+from input_output import read_positions_and_atom_names_from_file, print_to_file, read_cgbind, read_mdanalysis
 #from old.cavity_calculator_v08 import cagePDB
 
 
@@ -75,6 +75,24 @@ class cavity():
         cagePDBout1 = cagePDB.replace(".pdb", "_cavity.pdb")
         rdkit_cage = rdkit.MolFromMol2File(cageMOL, removeHs=False)
         '''
+
+    def read_cgbind(self, cgbind_cage):
+        self.positions, self.atom_names, self.atom_masses, self.atom_vdw = read_cgbind(cgbind_cage)
+        self.n_atoms = len(self.positions)
+
+        # Reset volume if the file is read  (in case it was calculated for the diffrent file)
+        self.volume = None
+        self.dummy_atoms = []
+
+
+    def read_mdanalysis(self, syst):
+        self.positions, self.atom_names, self.atom_masses, self.atom_vdw = read_mdanalysis(syst)
+        self.n_atoms = len(self.positions)
+
+        # Reset volume if the file is read  (in case it was calculated for the diffrent file)
+        self.volume = None
+        self.dummy_atoms = []
+
 
     def volume(self):
         if self.volume is None:
