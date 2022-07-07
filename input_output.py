@@ -42,8 +42,8 @@ def read_pdb(filename):
             if line.split()[0] == "HETATM" or line.split()[0] == "ATOM":
                 temp = np.array(list(map(float, line[30:54].split())))
                 positions.append(temp)
-                name_and_number = line[13:16].lower()
-                name_strip_number = re.match('([a-z]+)', name_and_number).group(1)
+                name_and_number = line[13:16].upper()
+                name_strip_number = re.match('([A-Z]+)', name_and_number).group(1)
                 atom_names.append(name_strip_number)
             elif line.split()[0] == "END":
                 break
@@ -63,8 +63,8 @@ def read_mol2(filename):
         for line in text.splitlines():
             if len(line) > 0:
                 positions.append([float(line.split()[2]), float(line.split()[3]), float(line.split()[4])])
-                name_and_number = line.split()[1].lower()
-                name_strip_number = re.match('([a-z]+)', name_and_number).group(1)
+                name_and_number = line.split()[1].upper()
+                name_strip_number = re.match('([A-Z]+)', name_and_number).group(1)
                 atom_names.append(name_strip_number)
 
     return np.array(positions), atom_names
@@ -89,7 +89,7 @@ def read_cgbind(cgbind_cage):
         print("Could not load cgbind")
         exit()
 
-    atom_names = [atom.label.lower() for atom in cgbind_cage.atoms]
+    atom_names = [atom.label.upper() for atom in cgbind_cage.atoms]
     positions = cgbind_cage.get_coords()
     return np.array(positions), atom_names, atom_names_to_masses(atom_names), atom_names_to_vdw(atom_names)
 
@@ -103,7 +103,7 @@ def read_mdanalysis(syst):
 
     atom_names = []
     for name in syst.atoms.names:
-        name_strip_number = re.match('([a-z]+)', name.lower()).group(1)
+        name_strip_number = re.match('([A-Z]+)', name.upper()).group(1)
         atom_names.append(name_strip_number)
     positions = syst.atoms.positions
 
@@ -113,26 +113,30 @@ def read_mdanalysis(syst):
 # ----------------- OUTPUT -------------------------
 
 
-def print_to_file(filename, positions, atom_names):
+def print_to_file(filename, positions, atom_names, property_values = None):
+    if property_values is not None and not filename.endswith('.pdb'):
+        print("properties can be saved only to pdb file!")
+        exit()
+
     if filename.endswith(".xyz"):
         print_to_xyz_file(filename, positions, atom_names)
     elif filename.endswith(".pdb"):
-        print_to_pdb_file(filename, positions, atom_names)
+        print_to_pdb_file(filename, positions, atom_names, property_values)
     else:
         print_to_other_file(filename, positions, atom_names)  # TODO
 
 
-def print_to_pdb_file(filename, positions, atom_names):
+def print_to_pdb_file(filename, positions, atom_names, property_values):
     with open(filename, 'w') as xyz_file:
         # print(len(positions), "CageCavityCalc", sep='\n', file=xyz_file)
         for a, pos in enumerate(positions):
             if atom_names[a] != "D":
                 print(
-                    f"ATOM  {a:>5d} {atom_names[a].upper() + str(a):<4s}  CG A   0    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0:6.2f}",
+                    f"ATOM  {a:>5d} {atom_names[a].upper() + str(a):<4s}  CG A   0    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0.0:6.2f}",
                     file=xyz_file)
             else:
                 print(
-                    f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CV B   1    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0:6.2f}",
+                    f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CV B   1    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{property_values[a]:6.2f}",
                     file=xyz_file)
     return None
 

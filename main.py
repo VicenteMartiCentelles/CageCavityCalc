@@ -10,10 +10,10 @@ import math
 import time
 from scipy.spatial import KDTree
 
-from hydrophobicity_values import hydrophValuesGhose1998, hydrophValuesCrippen1999
-from calculations import sum_grid_volume, assignHydrophobicValuesToCageAtoms
-from cavity_classes import GridPoint, CageGrid
-
+from data import hydrophValuesGhose1998, hydrophValuesCrippen1999
+from calculations import sum_grid_volume
+from grid_classes import GridPoint, CageGrid
+from hydrophobicity import assignHydrophobicValuesToCageAtoms, calc_single_hydrophobicity
 
 from input_output import read_positions_and_atom_names_from_file, print_to_file, read_cgbind, read_mdanalysis
 #from old.cavity_calculator_v08 import cagePDB
@@ -30,8 +30,6 @@ class cavity():
         calculate_bfactor = True
         compute_aromatic_contacts = False
         compute_hydrophobicity = True
-        distance_function = "Fauchere" #Audry, Fauchere, Fauchere2 // Distance function of the hydrophobic potential, OnlyValues to do not consider the distance (only used for testing purpouses)
-        distThreshold_atom_contacts = 20.0
         self.dummy_atom_radii = 1 #radius of the dummy atom use for the cavity calculations
         self.distanceFromCOMFactor = 0.4 #Distance from the center of mass factor 0-1 to consider spherical cavity, only useful for large cavities
 
@@ -40,7 +38,8 @@ class cavity():
         printLevel = 1 #print level 1 = normal print, print level 2 = print all info
 
         #hydrophValues = hydrophValuesGhose1998
-        hydrophValues = hydrophValuesCrippen1999
+        self.hydrophValues = hydrophValuesCrippen1999
+
 
 
         # proporties of the loaded cage:
@@ -57,24 +56,30 @@ class cavity():
 
         self.volume = None
 
+
+        self.filename = None # original file of the cage (might be needed to conversion to rdkit in case of hydrophobicity calculation)
+        self.compute_hydrophobicity = True
+        self.KDTree_dict = None
+        self.distThreshold_atom_contacts = 20.0
+        self.distance_function = "Fauchere" #Audry, Fauchere, Fauchere2 // Distance function of the hydrophobic potential, OnlyValues to do not consider the distance (only used for testing purpouses)
+        # Calculated properties (since they are easy to calculate
+        self.hydrohobivity = []
+        self.aromatic_constacts = []
+        self.solvent_accessibility = []
+
+
+
+
     def read_file(self, filename):
+        self.filename = filename
         self.positions, self.atom_names, self.atom_masses, self.atom_vdw = read_positions_and_atom_names_from_file(filename)
         self.n_atoms = len(self.positions)
         # Reset volume if the file is read  (in case it was calculated for the diffrent file)
         self.volume = None
         self.dummy_atoms = []
 
-        ########## cavity calculation
-        '''
-        cageMOL = "test.mol2"  # we need mol files as pdb file was not behaving OK with the aromatic
-        os.chdir("./test")
-        print("Current Working Directory ", os.getcwd())
-        
-        ## Load cage MOL file using RDKit
-        cagePDB = cageMOL.replace(".mol2", ".pdb")
-        cagePDBout1 = cagePDB.replace(".pdb", "_cavity.pdb")
-        rdkit_cage = rdkit.MolFromMol2File(cageMOL, removeHs=False)
-        '''
+
+
 
     def read_cgbind(self, cgbind_cage):
         self.positions, self.atom_names, self.atom_masses, self.atom_vdw = read_cgbind(cgbind_cage)
@@ -118,9 +123,6 @@ class cavity():
         self.volume = self.sum_up_volume()
         return self.volume
         print(f"--- Total time {(time.time() - start_time):.0f} seconds ---" )
-
-    def hydrophobicity(self):
-        None #TODO
 
     def pymol(self):
         None #TODO
@@ -179,53 +181,30 @@ class cavity():
         calculatedGird = CageGrid(pore_center_of_mass, box_size, delta = 0, grid_spacing = self.grid_spacing)
         return calculatedGird
 
-    def create_dummy_molecule(self):
-        if(printLevel == 2):
-            #Create an empty editable molecule in RDKit, to save the dummy atom box
-            rdkit_molRW = rdkit.RWMol()
-            rdkit_conf = rdkit.Conformer(1)
-
-            for i, dummy_atom in enumerate(calculatedGird.grid):
-                #Add atom to the RDKit molecule
-                indexNewAtom = rdkit_molRW.AddAtom(rdkit.Atom(1))
-                rdkit_conf.SetAtomPosition(indexNewAtom,Point3D(dummy_atom.x,dummy_atom.y,dummy_atom.z)) #Set xyz postion
-                molecInfo = rdkit.AtomPDBResidueInfo()
-                molecInfo.SetName(' D') # the rdkit PDB name has incorrect whitespace
-                molecInfo.SetResidueName('HOH')
-                molecInfo.SetResidueName(''.ljust(2-len('D'))+'HOH') # the rdkit PDB residue name has incorrect whitespace
-                molecInfo.SetResidueNumber(indexNewAtom+1)
-                molecInfo.SetIsHeteroAtom(False)
-                molecInfo.SetOccupancy(1.0)
-                molecInfo.SetTempFactor(1.0)
-                rdkit_molRW.GetAtomWithIdx(indexNewAtom).SetMonomerInfo(molecInfo)
-
-            rdkit_molRW.AddConformer(rdkit_conf, assignId=True)
-
-            print("Saving PDB file with the box of dummy cavity atoms")
-            rdkit.MolToPDBFile(rdkit_molRW, cagePDB.replace(".pdb", "_box_cavity.pdb"))
-
     def find_dummies_inside_cavity(self, calculatedGird, pore_center_of_mass, pore_radius):
         #Create a KDTree for each atom type and store in a dict
-        atom_type_list = []
+        self.atom_type_list = []
         coords_dict = {}
         vdwR_dict = {}
-        atom_idx_dict = {}
+        self.atom_idx_dict = {}
 
         for atom_idx, cage_name in enumerate(self.atom_names):
             atom_type = cage_name
             pos = self.positions[atom_idx]
 
-            if atom_type not in atom_type_list:
-                atom_type_list.append(atom_type)
+            if atom_type not in self.atom_type_list:
+                self.atom_type_list.append(atom_type)
 
                 vdwR_dict.setdefault(atom_type, []).append(self.atom_vdw[atom_idx])
 
             coords_dict.setdefault(atom_type, []).append(list(pos))
-            atom_idx_dict.setdefault(atom_type, []).append(atom_idx)
+            self.atom_idx_dict.setdefault(atom_type, []).append(atom_idx)
 
-        KDTree_dict = {}
-        for atom_type in atom_type_list:
-            KDTree_dict[atom_type] = KDTree(coords_dict[atom_type], leafsize = 20)
+        self.KDTree_dict = {}
+        for atom_type in self.atom_type_list:
+            self.KDTree_dict[atom_type] = KDTree(coords_dict[atom_type], leafsize = 20)
+
+
 
         #Calculate the dummy atoms that form the cavity using the angle method, also check that atoms do not overlap with cage
         vdwRdummy = self.dummy_atom_radii #Radius of the dummy D atoms in the cavity defined with a custom diameter
@@ -240,8 +219,8 @@ class cavity():
             if i.inside_cavity == 0:
                 summAngles = []
                 distancesAngles = []
-                for atom_type in atom_type_list:
-                    xyzAtomsSet2 = KDTree_dict[atom_type].query(i.pos, k = None, p = 2,
+                for atom_type in self.atom_type_list:
+                    xyzAtomsSet2 = self.KDTree_dict[atom_type].query(i.pos, k = None, p = 2,
                                                                 distance_upper_bound = self.distance_threshold_for_90_deg_angle)
                     if xyzAtomsSet2[1]:
                         vdwR = vdwR_dict[atom_type][0]
@@ -276,13 +255,6 @@ class cavity():
             if dummy_atom.inside_cavity == 1:
                 xyzDummySet = calculatedGirdContactsKDTree.query(dummy_atom.pos, k=None, p=2, distance_upper_bound=1.1*self.grid_spacing)
                 dummy_atom.number_of_neighbors = len(xyzDummySet[1])
-
-
-        #Create an empty editable molecule in RDKit, store bfactor data then save as PDB
-        '''
-        rdkit_molRW = rdkit.RWMol()
-        rdkit_conf = rdkit.Conformer(1)
-        '''
 
         for i, dummy_atom in enumerate(calculatedGird.grid):
             if (dummy_atom.inside_cavity == 1 and dummy_atom.overlapping_with_cage == 0):
@@ -387,22 +359,110 @@ class cavity():
             file1.write("Total cavity hydrophobicity = " + str(total_cavity_hydrophobicity) + "\n")
             file1.close()
             '''
-
         else:
             print("Cavity with no volume")
 
     #def to_pdb_file(self):
 
-    def print_to_file(self, filename):
+    def print_to_file(self, filename, property_name = None):
+        # TODO only pdb and the propety value
         if len(self.dummy_atoms_positions)==0:
             print("No cavity, saving just the input!")
             print_to_file(filename, self.positions, self.atom_names)
         else:
+            property_values = None
+            if property_name == "hydrophobicity" or property_name == "hydro" or property_name == "h":
+                property_values = np.append(np.zeros((len(self.positions))), self.hydrohobivity)
+            elif property_name == "artomaticity" or property_name == "aromatic_contast" or property_name == "a":
+                property_values = np.append(np.zeros((len(self.positions))), self.hydrohobivity)
+            elif property_name == "solvent_accessibility" or property_name == "solvent" or property_name == "s":
+                property_values = np.append(np.zeros((len(self.positions))), self.solvent_accessibility)
+
             positions = np.vstack([self.positions, self.dummy_atoms_positions])
-            #positions2 = np.hstack([self.positions, self.dummy_atoms_positions])
 
             atom_names = np.append(self.atom_names, np.array(['D']*len(self.dummy_atoms_positions)))
-            print_to_file(filename, positions, atom_names)
+            print_to_file(filename, positions, atom_names, property_values)
+
+    def calculate_hydrophobicity(self): #TODO
+        # TODO check if volume already calcualted
+
+        if self.filename.endswith('.mol2'):
+            rdkit_cage = rdkit.MolFromMol2File(self.filename, removeHs=False)
+        else:
+            #openbabel
+            try:
+                import openbabel
+            except:
+                print("You must either provide .mol2 file or install openbabel") # TODO
+
+        atomTypesMeanListHydrophValues, atomTypesValuesListHydrophValues, atomTypesInfoAtomSymbol, atomTypesInfoAtomGlobalIndex, atomTypesAssignemet = assignHydrophobicValuesToCageAtoms(rdkit_cage, self.hydrophValues)
+        atom_symbols_in_molecule = []
+
+        for atom_symbol in atomTypesInfoAtomSymbol:
+            if atom_symbol not in atom_symbols_in_molecule:
+                atom_symbols_in_molecule.append(atom_symbol)
+
+        atomTypes_HydrophValues_dict = {}
+        for j, atom_type in enumerate(atom_symbols_in_molecule):
+            k = 1
+            atomTypes_dict = {}
+            for i, atom_symbol in enumerate(atomTypesInfoAtomSymbol):
+
+                if atom_type == atom_symbol:
+                    atomTypes_dict[k] = i + 1
+                    k = k + 1
+            atomTypes_HydrophValues_dict[atom_type] = atomTypes_dict
+
+        for dummy_atom in self.dummy_atoms_positions:
+            #if (printLevel == 2): fileExtraData.write("-------------\n")
+            dummy_hydrophobicity = []
+            dummy_aromatic_contacts = []
+            dummy_solvent_accessibility = []
+
+            for atom_type in self.atom_type_list:
+
+                dist = self.KDTree_dict[atom_type].query(dummy_atom, k=None, p=2,
+                                                    distance_upper_bound=self.distThreshold_atom_contacts)
+                '''
+                if (printLevel == 2):
+                    fileExtraData.write(str(atom_type) + ": " + str(dist[0]) + "\n")
+                    fileExtraData.write(str(atom_type) + " Index: " + str(
+                        [x + 1 for x in dist[1]]) + "\n")  # Add 1 to key as atom number starts with 1 and list number with 0
+                    fileExtraData.write("Global Index: " + str([atomTypes_HydrophValues_dict[atom_type].get(key + 1) for key in
+                                                                dist[1]]) + "\n")  # Add 1 to key as atom number starts with 1 and list number with 0
+                '''
+
+                if dist[0]:
+                    for k in range(0, len(dist[0])):
+
+                        # calculate hydrophobicity
+                        Hydroph_Value = atomTypesMeanListHydrophValues[atomTypes_HydrophValues_dict[atom_type][1 + dist[1][
+                            k]] - 1]  # we need to add +1 to the k index as atom numbering is starts at 1 and lists index at 0. After taht, we need to add -1 to the atom index from the dict to obtain the value from the list that starts from 0
+
+                        hydro = calc_single_hydrophobicity(dist[0][k], Hydroph_Value, self.distance_function)
+                        dummy_hydrophobicity.append(hydro)
+
+                        #calculate aromatic contact
+                        isAromatic = rdkit_cage.GetAtomWithIdx(self.atom_idx_dict[atom_type][dist[1][k]]).GetIsAromatic()
+                        if isAromatic == True:
+                            dummy_aromatic_contacts.append(1 / (1 + dist[0][k]))
+                        else:
+                            dummy_aromatic_contacts.append(0)
+
+                        #calculate solvent accessibility
+                        dummy_solvent_accessibility.append(1/dist[0][k])
+
+            self.hydrohobivity.append(np.sum(dummy_hydrophobicity))
+            self.aromatic_constacts.append(np.sum(dummy_aromatic_contacts))
+            self.solvent_accessibility.append(np.sum(dummy_solvent_accessibility))
+
+        '''
+        elif compute_aromatic_contacts == True:
+            isAromatic = rdkit_cage.GetAtomWithIdx(atom_idx_dict[atom_type][dist[1][k]]).GetIsAromatic()
+            if isAromatic == True:
+                bfactor_info.append(1 / (1 + dist[0][k]))
+
+        '''
 
 import argparse
 
@@ -423,7 +483,3 @@ if __name__ == '__main__':
     volume = cav.calculate_volume()
     cav.print_to_file("cage_cavity.pdb")
     print("Cage cavity volume = ", volume, " A3")
-
-
-
-
