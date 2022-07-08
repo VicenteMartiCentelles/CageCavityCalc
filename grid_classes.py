@@ -77,6 +77,10 @@ class CageGrid:
             self.points_x = math.ceil((self.size_x_max-self.size_x_min + delta) / self.grid_spacing)+1
             self.points_y = math.ceil((self.size_y_max-self.size_y_min + delta) / self.grid_spacing)+1
             self.points_z = math.ceil((self.size_z_max-self.size_z_min + delta) / self.grid_spacing)+1
+
+            print("LENGHT", (self.points_x)*(self.points_y)*(self.points_z)) #TODO Assert
+
+
             self.points = [self.points_x,self.points_y,self.points_z]
             self.grid = [GridPoint(i,j,k, self.points, self.center, self.grid_spacing) for k in range(self.points_z) for j in range(self.points_y) for i in range(self.points_x)]
             self.grid = np.array(self.grid)

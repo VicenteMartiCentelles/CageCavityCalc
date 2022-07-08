@@ -19,6 +19,10 @@ from input_output import read_positions_and_atom_names_from_file, print_to_file,
 #from old.cavity_calculator_v08 import cagePDB
 
 
+#TODO check if there are dummy atoms (without radius)
+# TODO automaticly change to low resolution if the cage is large
+# TODO check the window size to deterimne distance_threshold
+
 class cavity():
     def __init__(self):
         '''
@@ -111,8 +115,6 @@ class cavity():
 
         # TODO check the volume and check if positions ant atoms names not empty
 
-
-
         start_time = time.time()
         pore_center_of_mass, pore_radius = self.calculate_center_and_radius()
 
@@ -141,25 +143,9 @@ class cavity():
         return pore_center_of_mass, pore_radius
 
         # Assign the hydrophobic values to cage atoms from the library
-        #HYDRO atomTypesMeanListHydrophValues, atomTypesValuesListHydrophValues, atomTypesInfoAtomSymbol, atomTypesInfoAtomGlobalIndex, atomTypesAssignemet = assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel)
 
         '''HYDRO
-                atom_symbols_in_molecule = []
-                for atom_symbol in atomTypesInfoAtomSymbol:
-                    if atom_symbol not in atom_symbols_in_molecule:
-                        atom_symbols_in_molecule.append(atom_symbol)
-                
-                atomTypes_HydrophValues_dict = {}
-                for j, atom_type in enumerate(atom_symbols_in_molecule):
-                    k = 1
-                    atomTypes_dict = {}
-                    for i, atom_symbol in enumerate(atomTypesInfoAtomSymbol):
-                        if atom_type == atom_symbol: 
-                            atomTypes_dict[k] = i + 1
-                            k = k + 1
-                    atomTypes_HydrophValues_dict[atom_type] = atomTypes_dict
-        
-                print(atomTypes_HydrophValues_dict)
+
            
         if (printLevel == 2): 
             fileExtraData = open(cagePDB.replace(".pdb", "_extra_data.txt"),"w+")
@@ -273,38 +259,12 @@ class cavity():
                                 fileExtraData.write( str(atom_type) + " Index: "+ str([x+1 for x in dist[1]]) + "\n" )# Add 1 to key as atom number starts with 1 and list number with 0
                                 fileExtraData.write( "Global Index: " + str([atomTypes_HydrophValues_dict[atom_type].get(key+1) for key in dist[1]]) + "\n" ) # Add 1 to key as atom number starts with 1 and list number with 0
 
-                            if dist[0]:
-                                for k in range (0, len(dist[0])):
-                                    Hydroph_Value = atomTypesMeanListHydrophValues[atomTypes_HydrophValues_dict[atom_type][1+dist[1][k]] -1 ] # we need to add +1 to the k index as atom numbering is starts at 1 and lists index at 0. After taht, we need to add -1 to the atom index from the dict to obtain the value from the list that starts from 0
-                                    if compute_hydrophobicity == True:
-                                        if distance_function == "Audry":
-                                            bfactor_info.append(Hydroph_Value/(1+dist[0][k]))
-                                        elif distance_function == "Fauchere":
-                                            bfactor_info.append(Hydroph_Value*np.exp(-1*dist[0][k]))
-                                        elif distance_function == "Fauchere2":
-                                            bfactor_info.append(Hydroph_Value*np.exp(-1/2*dist[0][k]))
-                                        elif distance_function == "OnlyValues":
-                                            bfactor_info.append( Hydroph_Value )
-                                    elif compute_aromatic_contacts == True:
-                                        isAromatic = rdkit_cage.GetAtomWithIdx(atom_idx_dict[atom_type][dist[1][k]]).GetIsAromatic()
-                                        if isAromatic == True:
-                                            bfactor_info.append(1/(1+dist[0][k]))
                     '''
 
                     #Add atom to the RDKit molecule
 
                     self.dummy_atoms_positions.append([dummy_atom.x,dummy_atom.y,dummy_atom.z])
-                    '''
-                    indexNewAtom = rdkit_molRW.AddAtom(rdkit.Atom(1))
-                    rdkit_conf.SetAtomPosition(indexNewAtom,Point3D(dummy_atom.x,dummy_atom.y,dummy_atom.z)) #Set xyz postion
-                    molecInfo = rdkit.AtomPDBResidueInfo()
-                    molecInfo.SetName(' D') # the rdkit PDB name has incorrect whitespace
-                    molecInfo.SetResidueName('HOH')
-                    molecInfo.SetResidueName(''.ljust(2-len('D'))+'HOH') # the rdkit PDB residue name has incorrect whitespace
-                    molecInfo.SetResidueNumber(indexNewAtom+1)
-                    molecInfo.SetIsHeteroAtom(False)
-                    molecInfo.SetOccupancy(1.0)
-                    '''
+
                     '''
                     if calculate_bfactor == True:
                         molecInfo.SetTempFactor( sum(bfactor_info) )  #Set the b-factor value
@@ -322,7 +282,6 @@ class cavity():
                     '''
 
         '''
-        rdkit_molRW.AddConformer(rdkit_conf, assignId=True)
 
         if (printLevel == 2): fileExtraData.close()
 
@@ -362,10 +321,7 @@ class cavity():
         else:
             print("Cavity with no volume")
 
-    #def to_pdb_file(self):
-
     def print_to_file(self, filename, property_name = None):
-        # TODO only pdb and the propety value
         if len(self.dummy_atoms_positions)==0:
             print("No cavity, saving just the input!")
             print_to_file(filename, self.positions, self.atom_names)

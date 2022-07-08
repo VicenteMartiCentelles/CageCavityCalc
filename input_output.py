@@ -6,14 +6,20 @@ from data import atom_mass, vdw_radii
 def atom_names_to_masses(names):
     atom_masses = []
     for name in names:
-        atom_masses.append(atom_mass[name])
+        if name in atom_mass:
+            atom_masses.append(atom_mass[name])
+        else:
+            atom_masses.append(0.0)
     return np.array(atom_masses)
 
 
 def atom_names_to_vdw(names):
     atom_vdw_radii = []
     for name in names:
-        atom_vdw_radii.append(vdw_radii[name])
+        if name in vdw_radii:
+            atom_vdw_radii.append(vdw_radii[name])
+        else:
+            atom_vdw_radii.append(0.0)
     return np.array(atom_vdw_radii)
 
 
@@ -126,18 +132,20 @@ def print_to_file(filename, positions, atom_names, property_values = None):
         print_to_other_file(filename, positions, atom_names)  # TODO
 
 
-def print_to_pdb_file(filename, positions, atom_names, property_values):
+def print_to_pdb_file(filename, positions, atom_names, property_values=None):
     with open(filename, 'w') as xyz_file:
         # print(len(positions), "CageCavityCalc", sep='\n', file=xyz_file)
         for a, pos in enumerate(positions):
             if atom_names[a] != "D":
                 print(
-                    f"ATOM  {a:>5d} {atom_names[a].upper() + str(a):<4s}  CG A   0    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0.0:6.2f}",
+                    f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CG A   0    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0.0:6.2f}",
                     file=xyz_file)
             else:
-                print(
-                    f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CV B   1    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{property_values[a]:6.2f}",
-                    file=xyz_file)
+                if property_values is not None:
+                    print(f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CV B   1    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{property_values[a]:6.2f}",file=xyz_file)
+                else:
+                    print(
+                        f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CV B   1    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0:6.2f}", file=xyz_file)
     return None
 
 
