@@ -15,11 +15,13 @@ from calculations import sum_grid_volume
 from grid_classes import GridPoint, CageGrid
 from hydrophobicity import assignHydrophobicValuesToCageAtoms, calc_single_hydrophobicity
 
-from input_output import read_positions_and_atom_names_from_file, print_to_file, read_cgbind, read_mdanalysis
+from input_output import read_positions_and_atom_names_from_file, print_to_file, read_cgbind, read_mdanalysis, print_pymol_file
 #from old.cavity_calculator_v08 import cagePDB
 
+from log import logger
 
-#TODO check if there are dummy atoms (without radius)
+
+# TODO check if there are dummy atoms (without radius)
 # TODO automaticly change to low resolution if the cage is large
 # TODO check the window size to deterimne distance_threshold
 
@@ -111,7 +113,7 @@ class cavity():
 
     def calculate_volume(self):
 
-        print("\n--- Calculation of the cavity ---")
+        logger.info("\n--- Calculation of the cavity ---")
 
         # TODO check the volume and check if positions ant atoms names not empty
 
@@ -124,15 +126,13 @@ class cavity():
         self.find_dummies_inside_cavity(calculatedGird, pore_center_of_mass, pore_radius)
         self.volume = self.sum_up_volume()
         return self.volume
-        print(f"--- Total time {(time.time() - start_time):.0f} seconds ---" )
+        logger.info(f"--- Total time {(time.time() - start_time):.0f} seconds ---" )
 
-    def pymol(self):
-        None #TODO
 
     def calculate_center_and_radius(self):
         #Calculate the center of mass of the cage using RDKit
         pore_center_of_mass = np.array(sum(self.atom_masses[i]*self.positions[i] for i in range(self.n_atoms)))/sum(self.atom_masses)
-        print("center_of_mass= ", pore_center_of_mass)
+        logger.info("center_of_mass= ", pore_center_of_mass)
 
         #We use the center of mass of the molecule as the pore center of mass
         kdtxyzAtoms = KDTree(self.positions, leafsize = 20) #Calculate the KDTree of the cage atom positions
@@ -160,9 +160,9 @@ class cavity():
         #box_size = maxDistanceFromCOM ## Not used, in this previous version we used a square box
         x_coordinates, y_coordinates, z_coordinates = zip(*self.positions)
         box_size = [min(x_coordinates),max(x_coordinates),min(y_coordinates),max(y_coordinates),min(z_coordinates),max(z_coordinates)]
-        print("Box x min/max= ", box_size[0], box_size[1])
-        print("Box y min/max= ", box_size[2], box_size[3])
-        print("Box z min/max= ", box_size[4], box_size[5])
+        logger.info("Box x min/max= ", box_size[0], box_size[1])
+        logger.info("Box y min/max= ", box_size[2], box_size[3])
+        logger.info("Box z min/max= ", box_size[4], box_size[5])
 
         calculatedGird = CageGrid(pore_center_of_mass, box_size, delta = 0, grid_spacing = self.grid_spacing)
         return calculatedGird
@@ -298,7 +298,7 @@ class cavity():
                                                radius=self.dummy_atom_radii,
                                                volume_grid_size=self.grid_spacing/2)
 
-            print("Cage cavity volume = ", cageCavityVolume, " A3")
+            logger.info("Cage cavity volume = ", cageCavityVolume, " A3")
             return cageCavityVolume
 
             '''
@@ -319,25 +319,43 @@ class cavity():
             file1.close()
             '''
         else:
-            print("Cavity with no volume")
+            logger.info("Cavity with no volume")
+
+
+    def get_property_values(self, property_name):
+        property_values = None
+        if property_name == "hydrophobicity" or property_name == "hydro" or property_name == "h":
+            property_values = np.append(np.zeros((len(self.positions))), self.hydrohobivity)
+        elif property_name == "aromaticity" or property_name == "aromatic_contast" or property_name == "a":
+            property_values = np.append(np.zeros((len(self.positions))), self.hydrohobivity)
+        elif property_name == "solvent_accessibility" or property_name == "solvent" or property_name == "s":
+            property_values = np.append(np.zeros((len(self.positions))), self.solvent_accessibility)
+        return property_values
 
     def print_to_file(self, filename, property_name = None):
         if len(self.dummy_atoms_positions)==0:
-            print("No cavity, saving just the input!")
+            logger.info("No cavity, saving just the input!")
             print_to_file(filename, self.positions, self.atom_names)
         else:
-            property_values = None
-            if property_name == "hydrophobicity" or property_name == "hydro" or property_name == "h":
-                property_values = np.append(np.zeros((len(self.positions))), self.hydrohobivity)
-            elif property_name == "artomaticity" or property_name == "aromatic_contast" or property_name == "a":
-                property_values = np.append(np.zeros((len(self.positions))), self.hydrohobivity)
-            elif property_name == "solvent_accessibility" or property_name == "solvent" or property_name == "s":
-                property_values = np.append(np.zeros((len(self.positions))), self.solvent_accessibility)
+            property_values = self.get_property_values(property_name)
 
             positions = np.vstack([self.positions, self.dummy_atoms_positions])
 
             atom_names = np.append(self.atom_names, np.array(['D']*len(self.dummy_atoms_positions)))
             print_to_file(filename, positions, atom_names, property_values)
+
+
+    def print_to_pymol(self, filename, property_name = None):
+        property_values = self.get_property_values(property_name)
+
+        #Firstly we need to save to pdb file
+        positions = np.vstack([self.positions, self.dummy_atoms_positions])
+        atom_names = np.append(self.atom_names, np.array(['D']*len(self.dummy_atoms_positions)))
+
+
+        print_to_file(filename[:filename.find('.')]+".pdb", positions, atom_names, property_values)
+        #Than pymol:
+        print_pymol_file(filename, property_values)
 
     def calculate_hydrophobicity(self): #TODO
         # TODO check if volume already calcualted

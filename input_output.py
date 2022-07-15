@@ -1,6 +1,7 @@
 import numpy as np
 import re
 from data import atom_mass, vdw_radii
+from log import logger
 
 
 def atom_names_to_masses(names):
@@ -156,9 +157,7 @@ def print_to_xyz_file(filename, positions, atom_names):
     :param positions:
     :param atom_names:
     """
-    print(positions.shape, atom_names.shape)
-    print(positions)
-    print(atom_names)
+
     with open(filename, 'w') as xyz_file:
         print(len(positions), "CageCavityCalc", sep='\n', file=xyz_file)
         for a, pos in enumerate(positions):
@@ -189,11 +188,22 @@ def print_to_other_file(filename, positions, atom_names):
 
 
 
-def print_pymol_file(filename):
+def print_pymol_file(filename, property_values=None):
+    if not filename.endswith(".pml"):
+        logger.warning("To easy open this file in pymol it should have *.pml extension")
+
+
     with open(filename, 'w') as file:
-        print("extract 'cavity', name D", file=file)
+        print(f"load {filename[:filename.find('.')]}.pdb", file=file) # TODO file
         print("hid h.", file=file)
+        print("extract cavity, resname CV", file=file)
         print("show_as surface, cavity", file=file)
+
+        if property_values is not None:
+            print(f"spectrum b, blue_white_red,cavity, minimum={np.min(property_values):f}, maximum={np.max(property_values):f}", file=file)
+            print(f"ramp_new 'ramp', cavity, [{np.min(property_values):f},{np.mean(property_values):f},{np.max(property_values):f}], ['blue','white','red']", file=file)
+            print("recolor", file=file)
+
 
         ######################################################################
         ###        Open the saved cavity in PyMol

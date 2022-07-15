@@ -1,6 +1,7 @@
 
 import numpy as np
 from rdkit import Chem
+from log import logger
 
 # Assign the hydrophobic values to cage atoms from the library
 def assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel=2):
@@ -45,7 +46,7 @@ def assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel=2):
                 valuesList.append(hydrophValues[j][2])
         else:
             valuesList.append(0)
-            print("WARNING: atom ", atomSymbol, i + 1, "not found. Assinged 0 as hydropobicity factor.")
+            logger.warning("WARNING: atom ", atomSymbol, i + 1, "not found. Assinged 0 as hydropobicity factor.")
 
         atomTypesListHydrophValues.append(valuesList)
         meanValuestList = np.mean(valuesList)
@@ -54,7 +55,7 @@ def assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel=2):
         atomTypesInfoAtomSymbol.append(atomSymbol)
         atomTypesInfoAtomGlobalIndex.append(i + 1)
         atomTypesAssignemet.append(atomTypesList[i])
-        if (printLevel == 2): print(atomSymbol, i + 1, atomTypesList[i], valuesList, meanValuestList)
+        logger.info(atomSymbol, i + 1, atomTypesList[i], valuesList, meanValuestList)
 
     return atomTypesMeanListHydrophValues, atomTypesValuesListHydrophValues, atomTypesInfoAtomSymbol, atomTypesInfoAtomGlobalIndex, atomTypesAssignemet
 
