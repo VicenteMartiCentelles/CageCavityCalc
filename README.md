@@ -1,24 +1,39 @@
 # CageCavityCalc
 Automated calculation of cavity in molecular cages
 
-Several option of working exist:
+![Alt text](pic/principle.png "Principle")
 
-From python:
+### Quick start
+
+Using as a python module:
 ```
 cavity_calc = CageCavCalc()
 cavity_calc.read_file("cage.pdb")
 cavity_calc.volume()
 ```
-It also alows to visuale it by creating .pse/pdb file with dummy atoms:
+The cavity can be saved into pdb file (and also create pymol *.pml to facilitate cavity visualization) 
 ```
-#TODO
+cavity_calc.print_to_file("cage_cavity.pdb")
+cavity_calc.print_to_pymol("cage_cavity.pml")
 ```
-You can also calculate hydrophobicity index and visualise it:
+![Alt text](pic/cavity.png "Principle")
+
+You can also calculate hydrophobicity index and visualise it on the cavity:
 ```
-#TODO
+cavity_calc.calculate_hydrophobicity()
+cavity_calc.print_to_pymol("cage_cavity_hydrophobicity.pml")
+```
+![Alt text](pic/hydrophobicity.png "Principle")
+
+
+From bash:
+```
+python ../../main.py -f cage.pdb -o cage_cavity.pdb
 ```
 
-Also cgbind:
+### Additional support
+
+Reading cage class from cgbind:
 ```
 from cgbind import Linker, Cage
 linker = Linker(smiles='C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1', arch_name='m2l4')
@@ -31,19 +46,8 @@ cav.calculate_volume()
 cav.print_to_file("cage_cavity.pdb")
 ```
 
-And lastly from MDAnalysis:
-```
-import MDAnalysis
-syst = MDAnalysis.Universe("cage.gro")
-
-from main import cavity
-cav = cavity()
-cav.read_mdanalysis(syst)
-cav.calculate_volume()
-cav.print_to_file("cage_cavity.pdb")
-```
-
-By MDAnalysis it is possible to calculate trajectory:
+Reading MDAnalysis universe:
+ 
 ```commandline
 from main import cavity
 cav = cavity()
@@ -57,9 +61,4 @@ for ts in syst.trajectory:
     volume.append(cav.calculate_volume())
 
 print(volume)
-```
-
-From bash:
-```
-python ../../main.py -f cage.pdb -o cage_cavity.pdb
 ```

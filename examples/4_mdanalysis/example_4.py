@@ -4,6 +4,7 @@ syst = MDAnalysis.Universe("cage.gro")
 from main import cavity
 cav = cavity()
 cav.read_mdanalysis(syst)
-cav.calculate_volume()
+volume = cav.calculate_volume()
+print("Volume=", volume)
 cav.print_to_file("cage_cavity.pdb")
 

@@ -49,7 +49,7 @@ class GridPoint:
             self.vector_angle = 0        
             self.neighbors = []
 
-
+import sys
 class CageGrid:
     def __init__(self, center, box_size, delta, grid_spacing):
         
@@ -78,7 +78,7 @@ class CageGrid:
             self.points_y = math.ceil((self.size_y_max-self.size_y_min + delta) / self.grid_spacing)+1
             self.points_z = math.ceil((self.size_z_max-self.size_z_min + delta) / self.grid_spacing)+1
 
-            print("LENGHT", (self.points_x)*(self.points_y)*(self.points_z)) #TODO Assert
+
 
 
             self.points = [self.points_x,self.points_y,self.points_z]
@@ -87,4 +87,10 @@ class CageGrid:
             self.gridPosList = []
             for i in self.grid:
                 self.gridPosList.append(i.pos)
+
+
+            #print("LENGHT", (self.points_x)*(self.points_y)*(self.points_z)) #TODO Assert
+            total = (self.points_x)*(self.points_y)*(self.points_z)
+            print(sys.getsizeof(self.grid[0])*total)
+            print(sys.getsizeof(self.grid[0]) * total/1e6)
 

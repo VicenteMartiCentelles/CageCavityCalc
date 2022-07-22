@@ -1,6 +1,7 @@
 import numpy as np
-import MDAnalysis
 from rdkit import Chem
+
+from scipy.spatial import distance_matrix
 
 def sum_grid_volume(positions,radius=1.2, volume_grid_size=0.2):
     """
@@ -17,7 +18,10 @@ def sum_grid_volume(positions,radius=1.2, volume_grid_size=0.2):
     # convert x,y,z axis to 3d vector
     grid_points = np.vstack(np.meshgrid(x_space,y_space,z_space)).reshape(3,-1).T
     # calcualte distance between the points
-    dist_matrix = MDAnalysis.lib.distances.distance_array(positions, grid_points)
+
+    dist_matrix = distance_matrix(positions, grid_points)
+    # TODO distance matrix is bottleneck of the size
+
     # if grid point within radius of position then we add volume of the grid
     return np.sum(np.sum(dist_matrix<radius,axis=0)>0)*(volume_grid_size**3)
     
