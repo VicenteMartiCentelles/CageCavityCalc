@@ -1,7 +1,13 @@
 import numpy as np
 import re
-from data import atom_mass, vdw_radii
+from data import atom_mass, vdw_radii, name_to_atomic_number
 from log import logger
+
+from tempfile import mkdtemp
+from rdkit import Chem
+import rdkit.Chem.AllChem as rdkit
+from rdkit.Geometry import Point3D
+
 
 
 def atom_names_to_masses(names):
@@ -137,16 +143,19 @@ def print_to_pdb_file(filename, positions, atom_names, property_values=None):
     with open(filename, 'w') as xyz_file:
         # print(len(positions), "CageCavityCalc", sep='\n', file=xyz_file)
         for a, pos in enumerate(positions):
+
+            element = re.search("([a-zA-Z]+)", atom_names[a]).group(1)
+
             if atom_names[a] != "D":
                 print(
-                    f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CG A   0    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0.0:6.2f}",
+                    f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CG A   0    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0.0:6.2f}          {element.upper():>2s}",
                     file=xyz_file)
             else:
                 if property_values is not None:
-                    print(f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CV B   1    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{property_values[a]:6.2f}",file=xyz_file)
+                    print(f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CV B   1    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{property_values[a]:6.2f}          {element.upper():>2s}",file=xyz_file)
                 else:
                     print(
-                        f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CV B   1    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0:6.2f}", file=xyz_file)
+                        f"ATOM  {a:>5d} {atom_names[a].upper():<4s}  CV B   1    {pos[0]:>8.3f}{pos[1]:>8.3f}{pos[2]:>8.3f}{0:6.2f}{0:6.2f}          {element.upper():>2s}", file=xyz_file)
     return None
 
 
@@ -185,8 +194,28 @@ def print_to_other_file(filename, positions, atom_names):
     return None
 
 
+def convert_to_mol2(positions, atom_names):
+    # openbabel
+    try:
+        from openbabel import openbabel
+    except:
+        print("You must either provide .mol2 file or install openbabel")  # TODO
 
 
+    tmpdir_path = mkdtemp()
+    print("tmpdir_path",tmpdir_path)
+
+    print_to_pdb_file(tmpdir_path+"/temp.pdb", positions, atom_names)
+
+    # Convert using Open Babel to .mol2 file
+    ob_conversion = openbabel.OBConversion()
+    ob_conversion.SetInAndOutFormats("pdb", "mol2")
+    mol = openbabel.OBMol()
+    ob_conversion.ReadFile(mol, tmpdir_path + "/temp.pdb")
+    ob_conversion.WriteFile(mol, tmpdir_path + "/temp.mol2")
+
+    rdkit_cage = rdkit.MolFromMol2File(tmpdir_path + "/temp.mol2", removeHs=False)
+    return rdkit_cage
 
 def print_pymol_file(filename, property_values=None):
     if not filename.endswith(".pml"):

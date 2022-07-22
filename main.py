@@ -15,15 +15,18 @@ from calculations import sum_grid_volume
 from grid_classes import GridPoint, CageGrid
 from hydrophobicity import assignHydrophobicValuesToCageAtoms, calc_single_hydrophobicity
 
-from input_output import read_positions_and_atom_names_from_file, print_to_file, read_cgbind, read_mdanalysis, print_pymol_file
+from input_output import read_positions_and_atom_names_from_file, print_to_file, read_cgbind, read_mdanalysis, print_pymol_file, convert_to_mol2
 #from old.cavity_calculator_v08 import cagePDB
 
 from log import logger
+
+from tempfile import mkdtemp
 
 
 # TODO check if there are dummy atoms (without radius)
 # TODO automaticly change to low resolution if the cage is large
 # TODO check the window size to deterimne distance_threshold
+# TODO example where xyz atoms and names are used
 
 class cavity():
     def __init__(self):
@@ -32,6 +35,9 @@ class cavity():
         '''
 
         self.grid_spacing = 1 # spacing between grid points
+        self.resolution = None # also spacing, but specified by user, if specified the program will be force to use it
+        # otherwise it will try to adjust resolution to the size of the cage (important in case of large cages)
+
         self.distance_threshold_for_90_deg_angle = 7
         calculate_bfactor = True
         compute_aromatic_contacts = False
@@ -64,7 +70,7 @@ class cavity():
 
 
         self.filename = None # original file of the cage (might be needed to conversion to rdkit in case of hydrophobicity calculation)
-        self.compute_hydrophobicity = True
+        self.compute_hydrophobicity = False
         self.KDTree_dict = None
         self.distThreshold_atom_contacts = 20.0
         self.distance_function = "Fauchere" #Audry, Fauchere, Fauchere2 // Distance function of the hydrophobic potential, OnlyValues to do not consider the distance (only used for testing purpouses)
@@ -118,6 +124,13 @@ class cavity():
         # TODO check the volume and check if positions ant atoms names not empty
 
         start_time = time.time()
+
+        if self.resolution is not None:
+            self.grid_spacing = self.resolution
+        else:
+            None
+            #TODO check memory
+
         pore_center_of_mass, pore_radius = self.calculate_center_and_radius()
 
         calculatedGird = self.set_up_grid(pore_center_of_mass)
@@ -324,12 +337,13 @@ class cavity():
 
     def get_property_values(self, property_name):
         property_values = None
-        if property_name == "hydrophobicity" or property_name == "hydro" or property_name == "h":
-            property_values = np.append(np.zeros((len(self.positions))), self.hydrohobivity)
-        elif property_name == "aromaticity" or property_name == "aromatic_contast" or property_name == "a":
+
+        if property_name == "aromaticity" or property_name == "aromatic_contast" or property_name == "a":
             property_values = np.append(np.zeros((len(self.positions))), self.hydrohobivity)
         elif property_name == "solvent_accessibility" or property_name == "solvent" or property_name == "s":
             property_values = np.append(np.zeros((len(self.positions))), self.solvent_accessibility)
+        elif self.compute_hydrophobicity == True or property_name == "hydrophobicity" or property_name == "hydro" or property_name == "h":
+            property_values = np.append(np.zeros((len(self.positions))), self.hydrohobivity)
         return property_values
 
     def print_to_file(self, filename, property_name = None):
@@ -360,17 +374,20 @@ class cavity():
     def calculate_hydrophobicity(self): #TODO
         # TODO check if volume already calcualted
 
-        if self.filename.endswith('.mol2'):
-            rdkit_cage = rdkit.MolFromMol2File(self.filename, removeHs=False)
+        self.compute_hydrophobicity = True
+
+        if self.filename is not None:
+                if self.filename.endswith('.mol2'):
+                    rdkit_cage = rdkit.MolFromMol2File(self.filename, removeHs=False)
         else:
-            #openbabel
-            try:
-                import openbabel
-            except:
-                print("You must either provide .mol2 file or install openbabel") # TODO
+            # use openbabel:
+            rdkit_cage = convert_to_mol2(self.positions, self.atom_names)
+
 
         atomTypesMeanListHydrophValues, atomTypesValuesListHydrophValues, atomTypesInfoAtomSymbol, atomTypesInfoAtomGlobalIndex, atomTypesAssignemet = assignHydrophobicValuesToCageAtoms(rdkit_cage, self.hydrophValues)
         atom_symbols_in_molecule = []
+
+
 
         for atom_symbol in atomTypesInfoAtomSymbol:
             if atom_symbol not in atom_symbols_in_molecule:

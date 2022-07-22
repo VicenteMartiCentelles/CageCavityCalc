@@ -52,7 +52,7 @@ def assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel=2):
         meanValuestList = np.mean(valuesList)
         atomTypesMeanListHydrophValues.append(meanValuestList)
         atomTypesValuesListHydrophValues.append(valuesList)
-        atomTypesInfoAtomSymbol.append(atomSymbol)
+        atomTypesInfoAtomSymbol.append(atomSymbol.upper()) # we need upper case
         atomTypesInfoAtomGlobalIndex.append(i + 1)
         atomTypesAssignemet.append(atomTypesList[i])
         logger.info(atomSymbol, i + 1, atomTypesList[i], valuesList, meanValuestList)
