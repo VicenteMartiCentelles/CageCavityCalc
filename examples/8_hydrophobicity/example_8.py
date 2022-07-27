@@ -1,4 +1,4 @@
-from main import cavity
+from CageCavityCalc import cavity
 
 cav = cavity()
 cav.read_file("cage_1_JACS_2006_128_14120.mol2")

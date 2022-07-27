@@ -41,7 +41,7 @@ def read_positions_and_atom_names_from_file(filename):
     elif filename.endswith(".mol2"):
         positions, atom_names = read_mol2(filename)
     else:
-        positions, atom_names = read_other(filename)  # TODO
+        positions, atom_names = read_other(filename)
 
     return positions, atom_names, atom_names_to_masses(atom_names), atom_names_to_vdw(atom_names)
 
@@ -127,6 +127,7 @@ def read_mdanalysis(syst):
 
 
 def print_to_file(filename, positions, atom_names, property_values = None):
+
     if property_values is not None and not filename.endswith('.pdb'):
         print("properties can be saved only to pdb file!")
         exit()
@@ -178,18 +179,25 @@ def print_to_other_file(filename, positions, atom_names):
     try:
         import MDAnalysis
     except:
-        print("The other formats are supported by MDAnalysis, which has been not found")
+        print("The other formats than *.pdb and *.xyz are supported by MDAnalysis, which has been not found")
         exit()
 
     n_atoms = len(positions)
-    new_universe = MDAnalysis.Universe.empty(n_atoms, n_residues=n_atoms, atom_resindex=[0] * n_atoms,
-                                               residue_segindex=[0] * n_atoms, trajectory=True)
+
+
+    resids = [1 * (atom_name == 'D') for atom_name in atom_names]
+    resnames = ['CG'*(atom_name!='D')+'CV'*(atom_name=='D') for atom_name in atom_names]
+
+    n_resids=len(set(resids))
+
+    new_universe = MDAnalysis.Universe.empty(n_atoms, n_residues=n_resids, atom_resindex=resids, trajectory=True)
     new_universe.add_TopologyAttr('tempfactors')
 
     # we put dummies far away from cage:
     new_universe.atoms.positions = positions
     new_universe.add_TopologyAttr('name', atom_names)
-    new_universe.add_TopologyAttr('resname', atom_names)
+
+    new_universe.add_TopologyAttr('resname', ['CG',  'CV'][:n_resids])
     new_universe.atoms.write(filename)
     return None
 
@@ -199,12 +207,10 @@ def convert_to_mol2(positions, atom_names):
     try:
         from openbabel import openbabel
     except:
-        print("You must either provide .mol2 file or install openbabel")  # TODO
+        print("You must either provide .mol2 file or install openbabel")
 
 
     tmpdir_path = mkdtemp()
-    print("tmpdir_path",tmpdir_path)
-
     print_to_pdb_file(tmpdir_path+"/temp.pdb", positions, atom_names)
 
     # Convert using Open Babel to .mol2 file
@@ -223,7 +229,7 @@ def print_pymol_file(filename, property_values=None):
 
 
     with open(filename, 'w') as file:
-        print(f"load {filename[:filename.find('.')]}.pdb", file=file) # TODO file
+        print(f"load {filename[:filename.find('.')]}.pdb", file=file)
         print("hid h.", file=file)
         print("extract cavity, resname CV", file=file)
         print("show_as surface, cavity", file=file)

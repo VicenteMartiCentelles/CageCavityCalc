@@ -2,7 +2,7 @@
 Set up logging with the standard python logging module. Set the log level with
 $CAV_LOG_LEVEL = {'', INFO, WARNING, DEBUG}
 
-i.e. export CGBIND_LOG_LEVEL=DEBUG
+i.e. export CAV_LOG_LEVEL=INFO
 
 """
 import logging
@@ -11,9 +11,10 @@ import os
 
 def get_log_level():
     try:
-        log_level_str = os.environ['$CAV_LOG_LEVEL']
+        log_level_str = os.environ['CAV_LOG_LEVEL']
     except KeyError:
         log_level_str = ''
+
 
     if log_level_str == 'DEBUG':
         return logging.DEBUG

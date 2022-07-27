@@ -2,10 +2,12 @@ from log import logger
 from scipy.optimize import basinhopping, minimize
 from scipy.spatial.distance import cdist
 import numpy as np
+from scipy.spatial import distance_matrix
+from data import vdw_radii
 
 #This is literally copied from cgbind
 
-def get_max_escape_sphere(cage_coords, basinh=False, max_dist_from_metals=10):
+def get_max_escape_sphere(cage_coords, atom_names, basinh=False, max_dist_from_metals=10):
     """
     Get the maximum radius of a sphere that can escape from the centroid of
     the cage – will iterate through all theta/phi
@@ -17,13 +19,17 @@ def get_max_escape_sphere(cage_coords, basinh=False, max_dist_from_metals=10):
                                 the search for the maximum escape sphere
     :return: (float) Volume of the maximum escape sphere in Å^3
     """
-    logger.info('Getting the volume of the largest sphere that can escape '
-                'from the cavity')
+    # logger.info('Getting the volume of the largest sphere that can escape '
+    #            'from the cavity')
 
     max_sphere_escape_r = 99999999999999.9
-    avg_m_m_dist = self.get_m_m_dist()
 
-    centroid = self.get_centroid()
+    # we approximate maximum distance by taking "at random" (first atom acctually) and checking the futherest atom, and its furthest atom
+    furthest_atom = np.argmax(distance_matrix([cage_coords[0]], cage_coords)[0])
+
+    avg_m_m_dist = np.max(distance_matrix([cage_coords[furthest_atom]], cage_coords)[0])
+
+    centroid = np.mean(cage_coords, axis=0)  # centroid
 
     cage_coords = np.array([coord - centroid for coord in cage_coords])
 
@@ -54,11 +60,11 @@ def get_max_escape_sphere(cage_coords, basinh=False, max_dist_from_metals=10):
     sphere_point = spherical_to_cart(r=opt_r, theta=opt_theta_phi[0], phi=opt_theta_phi[1])
     atom_id = np.argmin([np.linalg.norm(coord - sphere_point) for coord in cage_coords])
 
-    radius = max_sphere_escape_r - get_vdw_radii(atom=self.atoms[atom_id])
-    logger.info(f'Radius of largest sphere that can escape from the '
-                f'cavity = {radius}')
+    radius = max_sphere_escape_r - vdw_radii[atom_names[atom_id]]
+    # logger.info(f'Radius of largest sphere that can escape from the '
+    #            f'cavity = {radius}')
 
-    return (4.0 / 3.0) * np.pi * radius ** 3
+    return radius
 
 
 def get_max_sphere_negative_radius(theta_and_phi, r, cage_coords):
@@ -84,7 +90,6 @@ def get_max_sphere_negative_radius(theta_and_phi, r, cage_coords):
 
 
 def spherical_to_cart(r, theta, phi):
-
     return np.array([r * np.cos(theta) * np.sin(phi),
                      r * np.sin(theta) * np.sin(phi),
                      r * np.cos(phi)])

@@ -46,7 +46,7 @@ def assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel=2):
                 valuesList.append(hydrophValues[j][2])
         else:
             valuesList.append(0)
-            logger.warning("WARNING: atom ", atomSymbol, i + 1, "not found. Assinged 0 as hydropobicity factor.")
+            logger.warning(f"WARNING: atom {atomSymbol:}, {i + 1:}, not found. Assinged 0 as hydropobicity factor.")
 
         atomTypesListHydrophValues.append(valuesList)
         meanValuestList = np.mean(valuesList)
@@ -55,7 +55,7 @@ def assignHydrophobicValuesToCageAtoms(rdkit_cage, hydrophValues, printLevel=2):
         atomTypesInfoAtomSymbol.append(atomSymbol.upper()) # we need upper case
         atomTypesInfoAtomGlobalIndex.append(i + 1)
         atomTypesAssignemet.append(atomTypesList[i])
-        logger.info(atomSymbol, i + 1, atomTypesList[i], valuesList, meanValuestList)
+        logger.info(f"{atomSymbol:}, {i + 1:}, {atomTypesList[i]:}, {valuesList:}, {meanValuestList:}")
 
     return atomTypesMeanListHydrophValues, atomTypesValuesListHydrophValues, atomTypesInfoAtomSymbol, atomTypesInfoAtomGlobalIndex, atomTypesAssignemet
 

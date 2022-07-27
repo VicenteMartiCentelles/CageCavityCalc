@@ -1,7 +1,7 @@
 import MDAnalysis
 syst = MDAnalysis.Universe("cage.gro")
 
-from main import cavity
+from CageCavityCalc import cavity
 cav = cavity()
 cav.read_mdanalysis(syst)
 cav.calculate_volume()

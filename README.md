@@ -62,3 +62,10 @@ for ts in syst.trajectory:
 
 print(volume)
 ```
+
+### Other
+To make the calculation loud use CAV_LOG_LEVEL environmental variable
+
+```commandline
+export CAV_LOG_LEVEL=INFO
+```

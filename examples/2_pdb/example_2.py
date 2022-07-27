@@ -1,4 +1,4 @@
-from main import cavity
+from CageCavityCalc import cavity
 
 cav = cavity()
 cav.read_file("cage_ACIE_2006_45_901.pdb")

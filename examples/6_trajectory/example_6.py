@@ -1,5 +1,5 @@
 
-from main import cavity
+from CageCavityCalc import cavity
 cav = cavity()
 
 import MDAnalysis
