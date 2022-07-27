@@ -1,3 +1,43 @@
+# Van der Waals radii in Å taken from http://www.webelements.com/periodicity/van_der_waals_radius/
+
+vdw_radii = {'H': 1.2, 'HE': 1.4, 'LI': 1.82, 'BE': 1.53, 'B': 1.92, 'C': 1.7, 'N': 1.55, 'O': 1.52,
+             'F': 1.47, 'NE': 1.54, 'NA': 2.27, 'MG': 1.73, 'AL': 1.84, 'SI': 2.1, 'P': 1.8, 'S': 1.8,
+             'CL': 1.75, 'AR': 1.88, 'K': 2.75, 'CA': 2.31, 'NI': 1.63, 'CU': 1.4, 'ZN': 1.39, 'GA': 1.87,
+             'GE': 2.11, 'AS': 1.85, 'SE': 1.9, 'BR': 1.85, 'KR': 2.02, 'RB': 3.03, 'SR': 2.49, 'PD': 1.63,
+             'AG': 1.72, 'CD': 1.58, 'IN': 1.93, 'SN': 2.17, 'SB': 2.06, 'TE': 2.06, 'I': 1.98, 'XE': 2.16,
+             'CS': 3.43, 'BA': 2.49, 'PT': 1.75, 'AU': 1.66, 'FE': 1.4}
+
+atoms_lib = ['H', 'HE', 'LI', 'BE', 'B', 'C', 'N', 'O', 'F', 'NE', 'NA', 'MG', 'AL', 'SI', 'P', 'S', 'CL',
+             'AR', 'SC', 'TI', 'V', 'CR', 'MN', 'FE', 'CO', 'NI', 'CU', 'ZN', 'GA', 'GE', 'AS', 'SE', 'BR',
+             'KR', 'RB', 'SR', 'Y', 'ZR', 'NB', 'MO', 'TC', 'RU', 'RH', 'PD', 'AG', 'CD', 'IN', 'SB', 'TE',
+             'I', 'XE', 'CS', 'BA', 'LA', 'CE', 'PR', 'ND', 'PM', 'SM', 'EU', 'GD', 'TB', 'DY', 'HO', 'ER',
+             'TM', 'YB', 'LU', 'HF', 'TA', 'W', 'RE', 'OS', 'IR', 'PT', 'AU', 'HG', 'TL', 'PB', 'BI', 'PO',
+             'AT', 'RN', 'FR', 'RA', 'AC', 'TH', 'PA', 'U', 'NP', 'PU', 'AM', 'CM', 'BK', 'CF', 'ES', 'FM',
+             'MD', 'NO', 'LR', 'RF', 'DB', 'SG', 'BH', 'HS', 'MT', 'DS', 'RG', 'CN', 'NH', 'FL', 'MC', 'LV',
+             'TS', 'OG']
+
+# taken from  https://gist.github.com/lukasrichters14/c862644d4cbcf2d67252a484b7c6049c
+atom_mass = {'H' : 1.008,'HE' : 4.003, 'LI' : 6.941, 'BE' : 9.012, 'B' : 10.811, 'C' : 12.011, 'N' : 14.007,
+             'O' : 15.999, 'F' : 18.998, 'NE' : 20.180, 'NA' : 22.990, 'MG' : 24.305, 'AL' : 26.982,
+             'SI' : 28.086, 'P' : 30.974, 'S' : 32.066, 'CL' : 35.453, 'AR' : 39.948, 'K' : 39.098,
+             'CA' : 40.078, 'SC' : 44.956, 'TI' : 47.867, 'V' : 50.942, 'CR' : 51.996, 'MN' : 54.938,
+             'FE' : 55.845, 'CO' : 58.933, 'NI' : 58.693, 'CU' : 63.546, 'ZN' : 65.38, 'GA' : 69.723,
+             'GE' : 72.631, 'AS' : 74.922, 'SE' : 78.971, 'BR' : 79.904, 'KR' : 84.798, 'RB' : 84.468,
+             'SR' : 87.62, 'Y' : 88.906, 'ZR' : 91.224, 'NB' : 92.906, 'MO' : 95.95, 'TC' : 98.907,
+             'RU' : 101.07, 'RH' : 102.906, 'PD' : 106.42, 'AG' : 107.868, 'CD' : 112.414, 'IN' : 114.818,
+             'SN' : 118.711, 'SB' : 121.760, 'TE' : 126.7, 'I' : 126.904, 'XE' : 131.294, 'CS' : 132.905,
+             'BA' : 137.328, 'LA' : 138.905, 'CE' : 140.116, 'PR' : 140.908, 'ND' : 144.243, 'PM' : 144.913,
+             'SM' : 150.36, 'EU' : 151.964, 'GD' : 157.25, 'TB' : 158.925, 'DY': 162.500, 'HO' : 164.930,
+             'ER' : 167.259, 'TM' : 168.934, 'YB' : 173.055, 'LU' : 174.967, 'HF' : 178.49, 'TA' : 180.948,
+             'W' : 183.84, 'RE' : 186.207, 'OS' : 190.23, 'IR' : 192.217, 'PT' : 195.085, 'AU' : 196.967,
+             'HG' : 200.592, 'TL' : 204.383, 'PB' : 207.2, 'BI' : 208.980, 'PO' : 208.982, 'AT' : 209.987,
+             'RN' : 222.081, 'FR' : 223.020, 'RA' : 226.025, 'AC' : 227.028, 'TH' : 232.038, 'PA' : 231.036,
+             'U' : 238.029, 'NP' : 237, 'PU' : 244, 'AM' : 243, 'CM' : 247, 'BK' : 247, 'CT' : 251,
+             'ES' : 252, 'FM' : 257, 'MD' : 258, 'NO' : 259, 'LR' : 262, 'RF' : 261, 'DB' : 262, 'SG' : 266,
+             'BH' : 264, 'HS' : 269, 'MT' : 268, 'DS' : 271, 'RG' : 272, 'CN' : 285, 'NH' : 284, 'FL' : 289,
+             'MC' : 288, 'LV' : 292, 'TS' : 294, 'OG' : 294}
+
+name_to_atomic_number ={'H': 1, 'He': 2, 'Li': 3, 'Be': 4, 'B': 5, 'C': 6, 'N': 7, 'O': 8, 'F': 9, 'Ne': 10, 'Na': 11, 'Mg': 12, 'Al': 13, 'Si': 14, 'P': 15, 'S': 16, 'Cl': 17, 'Ar': 18, 'K': 19, 'Ca': 20, 'Sc': 21, 'Ti': 22, 'V': 23, 'Cr': 24, 'Mn': 25, 'Fe': 26, 'Co': 27, 'Ni': 28, 'Cu': 29, 'Zn': 30, 'Ga': 31, 'Ge': 32, 'As': 33, 'Se': 34, 'Br': 35, 'Kr': 36, 'Rb': 37, 'Sr': 38, 'Y': 39, 'Zr': 40, 'Nb': 41, 'Mo': 42, 'Tc': 43, 'Ru': 44, 'Rh': 45, 'Pd': 46, 'Ag': 47, 'Cd': 48, 'In': 49, 'Sn': 50, 'Sb': 51, 'Te': 52, 'I': 53, 'Xe': 54, 'Cs': 55, 'Ba': 56, 'La': 57, 'Ce': 58, 'Pr': 59, 'Nd': 60, 'Pm': 61, 'Sm': 62, 'Eu': 63, 'Gd': 64, 'Tb': 65, 'Dy': 66, 'Ho': 67, 'Er': 68, 'Tm': 69, 'Yb': 70, 'Lu': 71, 'Hf': 72, 'Ta': 73, 'W': 74, 'Re': 75, 'Os': 76, 'Ir': 77, 'Pt': 78, 'Au': 79, 'Hg': 80, 'Tl': 81, 'Pb': 82, 'Bi': 83, 'Po': 84, 'At': 85, 'Rn': 86, 'Fr': 87, 'Ra': 88, 'Ac': 89, 'Th': 90, 'Pa': 91, 'U': 92, 'Np': 93, 'Pu': 94, 'Am': 95, 'Cm': 96, 'Bk': 97, 'Cf': 98, 'Es': 99, 'Fm': 100, 'Md': 101, 'No': 102, 'Lr': 103, 'Rf': 104, 'Db': 105, 'Sg': 106, 'Bh': 107, 'Hs': 108, 'Mt': 109, 'Ds': 110, 'Rg': 111, 'Uub': 112}
 
 ## Atom hydrophobicity contribution values from Ghose J. Phys. Chem. A 1998, 102, 3762-3772
 #
@@ -47,7 +87,7 @@ hydrophValuesGhose1998 = {
 13: [12,'[CX4]([#6])([#6])([O,N,S,P,Se,F,Cl,Br,I,At])[O,N,S,P,Se,F,Cl,Br,I,At]',0.0200],
 
 #CRX3
-14: [13,'[CX4]([#6])([O,N,S,P,Se,F,Cl,Br,I,At])([O,N,S,P,Se,F,Cl,Br,I,At])[O,N,S,P,Se,F,Cl,Br,I,At]',0.7894], 
+14: [13,'[CX4]([#6])([O,N,S,P,Se,F,Cl,Br,I,At])([O,N,S,P,Se,F,Cl,Br,I,At])[O,N,S,P,Se,F,Cl,Br,I,At]',0.7894],
 
 #CX4
 15: [14,'[CX4]([O,N,S,P,Se,F,Cl,Br,I,At])([O,N,S,P,Se,F,Cl,Br,I,At])([O,N,S,P,Se,F,Cl,Br,I,At])[O,N,S,P,Se,F,Cl,Br,I,At]',1.6422],
@@ -71,52 +111,52 @@ hydrophValuesGhose1998 = {
 21: [20,'[CH0](=[#6])([O,N,S,P,Se,F,Cl,Br,I,At])[O,N,S,P,Se,F,Cl,Br,I,At]',0.2432],
 
 #triple-bond-CH
-22: [21,'[CH1]#[#6]',0.4697], 
+22: [21,'[CH1]#[#6]',0.4697],
 
 #triple-bond-CR
-23: [22,'[CH0](#[#6])[#6]',0.2952], 
+23: [22,'[CH0](#[#6])[#6]',0.2952],
 
 #R=C=R
-24: [22,'[C](=[#6])=[#6]',0.2952], 
+24: [22,'[C](=[#6])=[#6]',0.2952],
 
 #triple-bond-CH
-25: [23,'[CH0](#[#6])[O,N,S,P,Se,F,Cl,Br,I,At]',"undefined"], 
+25: [23,'[CH0](#[#6])[O,N,S,P,Se,F,Cl,Br,I,At]',"undefined"],
 
 #:R--CH--R aromatic
-26: [24,'[cH]',-0.3251], 
+26: [24,'[cH]',-0.3251],
 
 #:R--CR--R aromatic
-27: [25,'[c](:c)(:c)[#6]',0.1492], 
+27: [25,'[c](:c)(:c)[#6]',0.1492],
 
 #:R--CX--R aromatic
-28: [26,'[c](:c)(:c)[O,N,S,P,Se,F,Cl,Br,I,At]',0.1539], 
+28: [26,'[c](:c)(:c)[O,N,S,P,Se,F,Cl,Br,I,At]',0.1539],
 
 #:R--CH--X aromatic
-29: [27,'[cH](:c):[O,N,S,P,Se,F,Cl,Br,I,At]',0.0005], 
+29: [27,'[cH](:c):[O,N,S,P,Se,F,Cl,Br,I,At]',0.0005],
 
 #:R--CR--X aromatic
-30: [28,'[c]([#6])(:c):[O,N,S,P,Se,F,Cl,Br,I,At]',0.2361], 
+30: [28,'[c]([#6])(:c):[O,N,S,P,Se,F,Cl,Br,I,At]',0.2361],
 
 #:R--CX--X aromatic
-31: [29,'[c]([O,N,S,P,Se,F,Cl,Br,I,At])(:c):[O,N,S,P,Se,F,Cl,Br,I,At]',0.3514], 
+31: [29,'[c]([O,N,S,P,Se,F,Cl,Br,I,At])(:c):[O,N,S,P,Se,F,Cl,Br,I,At]',0.3514],
 
 #:X--CH--X aromatic
-32: [30,'[cH](:[O,N,S,P,Se,F,Cl,Br,I,At]):[O,N,S,P,Se,F,Cl,Br,I,At]',0.1814], 
+32: [30,'[cH](:[O,N,S,P,Se,F,Cl,Br,I,At]):[O,N,S,P,Se,F,Cl,Br,I,At]',0.1814],
 
 #:X--CR--X
-33: [31,'[c]([#6])(:[O,N,S,P,Se,F,Cl,Br,I,At]):[O,N,S,P,Se,F,Cl,Br,I,At]',0.0901], 
+33: [31,'[c]([#6])(:[O,N,S,P,Se,F,Cl,Br,I,At]):[O,N,S,P,Se,F,Cl,Br,I,At]',0.0901],
 
 #:X--CX--X
 34: [32,'[c]([O,N,S,P,Se,F,Cl,Br,I,At])(:[O,N,S,P,Se,F,Cl,Br,I,At]):[O,N,S,P,Se,F,Cl,Br,I,At]',0.5142],
 
 #:R--CH···X, C···X bond order in pyrrole or furan may be considered as 1
-35: [33,'[cr5]([#1])(:[#6]):[O,N,S,P,Se,F,Cl,Br,I,At]',-0.3723], 
+35: [33,'[cr5]([#1])(:[#6]):[O,N,S,P,Se,F,Cl,Br,I,At]',-0.3723],
 
 #:R--CR···X
-36: [34,'[cr5]([#6])(:[#6]):[O,N,S,P,Se,F,Cl,Br,I,At]',0.2813], 
+36: [34,'[cr5]([#6])(:[#6]):[O,N,S,P,Se,F,Cl,Br,I,At]',0.2813],
 
-#:R--CX···X 
-37: [35,'[cr5]([O,N,S,P,Se,F,Cl,Br,I,At])(:[#6]):[O,N,S,P,Se,F,Cl,Br,I,At]',0.1191], 
+#:R--CX···X
+37: [35,'[cr5]([O,N,S,P,Se,F,Cl,Br,I,At])(:[#6]):[O,N,S,P,Se,F,Cl,Br,I,At]',0.1191],
 
 #:Al-CH=X, Al represent aliphatic groups
 38: [36,'[C]([#1])(=[O,N,S,P,Se,F,Cl,Br,I,At])[C,#1]',-0.1320],
@@ -124,7 +164,7 @@ hydrophValuesGhose1998 = {
 #:Ar-CH=X, Ar represent aromatic groups
 39: [37,'[CH1](=[O,N,S,P,Se,F,Cl,Br,I,At])c',-0.0244],
 
-#:Al-C(=X)-Al 
+#:Al-C(=X)-Al
 40: [38,'[CH0](=[O,N,S,P,Se,F,Cl,Br,I,At])(C)C',-0.2405],
 
 #:Ar-C(=X)-R
@@ -136,19 +176,19 @@ hydrophValuesGhose1998 = {
 #:R-C-triple-bond-X
 43: [40,'[CH0](#[O,N,S,P,Se,F,Cl,Br,I,At])*',-0.1002],
 
-#:X=C=X 
+#:X=C=X
 44: [40,'[CH0](=[O,N,S,P,Se,F,Cl,Br,I,At])=[O,N,S,P,Se,F,Cl,Br,I,At]',-0.1002],
 
-#:X-C(=X)-X 
+#:X-C(=X)-X
 45: [41,'[C](=[O,N,S,P,Se,F,Cl,Br,I,At])([O,N,S,P,Se,F,Cl,Br,I,At])[O,N,S,P,Se,F,Cl,Br,I,At]',0.4182],
 
-#:X--CH···X 
+#:X--CH···X
 46: [42,'[cr5]([#1])(:[O,N,S,P,Se,F,Cl,Br,I,At]):[O,N,S,P,Se,F,Cl,Br,I,At]',-0.2147],
 
-#:X--CR···X 
+#:X--CR···X
 47: [43,'[cr5](*)(:[O,N,S,P,Se,F,Cl,Br,I,At]):[O,N,S,P,Se,F,Cl,Br,I,At]',-0.0009],
 
-#:X--CX···X 
+#:X--CX···X
 48: [44,'[cr5]([O,N,S,P,Se,F,Cl,Br,I,At])(:[O,N,S,P,Se,F,Cl,Br,I,At]):[O,N,S,P,Se,F,Cl,Br,I,At]',0.1388],
 
 #Atom type 45 is unused
@@ -167,15 +207,15 @@ hydrophValuesGhose1998 = {
 # ^4 matches SP3D hybridized atoms
 # ^5 matches SP3D2 hybridized atoms
 
-#:C^0_sp3 having no X attached to next C 
+#:C^0_sp3 having no X attached to next C
 #49: [46,'[#1][#6;^3][$([#6]~[!O;!N;!S;!P;!Se;!F;!Cl;!Br;!I;!At])]',0.7341],
 49: [46,'[#1][#6;^3][#6!$([#6]~N)&!$([#6]~O)&!$([#6]~S)&!$([#6]~P)&!$([#6]~F)&!$([#6]~Cl)&!$([#6]~Br)&!$([#6]~I)]',0.7341],
 
 
-#:C^1_sp3 
+#:C^1_sp3
 50: [47,'[#1][#6;^3](-[O,N,S,P,Se,F,Cl,Br,I,At])[#6!$([#6]~N)&!$([#6]~O)&!$([#6]~S)&!$([#6]~P)&!$([#6]~F)&!$([#6]~Cl)&!$([#6]~Br)&!$([#6]~I)]',0.6301],
 
-#:C^0_sp2 
+#:C^0_sp2
 #51: [47,'[#1][$([#6;^2]~[!O,!N,!S,!P,!Se,!F,!Cl,!Br,!I,!At])]',0.6301],
 51: [47,'[#1][#6;^2]([!O;!N;!S;!P;!Se;!F;!Cl;!Br;!I;!At])[!O;!N;!S;!P;!Se;!F;!Cl;!Br;!I;!At]',0.6301],
 
@@ -440,3 +480,4 @@ hydrophValuesCrippen1999={
 110:[110,'[#72,#73,#74,#75,#76,#77,#78,#79,#80]',-0.0025],#Me2
 
 }
+
