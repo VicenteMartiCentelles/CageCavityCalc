@@ -223,15 +223,15 @@ def convert_to_mol2(positions, atom_names):
     rdkit_cage = rdkit.MolFromMol2File(tmpdir_path + "/temp.mol2", removeHs=False)
     return rdkit_cage
 
-def print_pymol_file(filename, property_values=None):
+def print_pymol_file(filename, property_values=None, dummy_atom_radii=1):
     if not filename.endswith(".pml"):
         logger.warning("To easy open this file in pymol it should have *.pml extension")
 
 
     with open(filename, 'w') as file:
         print(f"load {filename[:filename.find('.')]}.pdb", file=file)
-        print("hid h.", file=file)
         print("extract cavity, resname CV", file=file)
+        print("alter name D, vdw="+str(dummy_atom_radii), file=file)
         print("show_as surface, cavity", file=file)
 
         if property_values is not None:

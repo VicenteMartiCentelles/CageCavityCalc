@@ -10,7 +10,7 @@ import math
 import time
 from scipy.spatial import KDTree
 
-from data import hydrophValuesGhose1998, hydrophValuesCrippen1999
+from data import hydrophValuesGhose1998, hydrophValuesCrippen1999, vdw_radii
 from calculations import sum_grid_volume
 from grid_classes import GridPoint, CageGrid
 from hydrophobicity import assignHydrophobicValuesToCageAtoms, calc_single_hydrophobicity
@@ -35,15 +35,15 @@ class cavity():
         compute_aromatic_contacts = False
         compute_hydrophobicity = True
         self.dummy_atom_radii = 1 #radius of the dummy atom use for the cavity calculations
-        self.distanceFromCOMFactor = 0.4 #Distance from the center of mass factor 0-1 to consider spherical cavity, only useful for large cavities
+        
+        # With the modified code we can always use distanceFromCOMFactor = 1
+        self.distanceFromCOMFactor = 1 #Distance from the center of mass factor 0-1 to consider spherical cavity, only useful for large cavities
 
         self.threads_KDThree = 4
 
         printLevel = 1 #print level 1 = normal print, print level 2 = print all info
-
-        #hydrophValues = hydrophValuesGhose1998
-        self.hydrophValues = hydrophValuesCrippen1999
-
+        
+        self.hydrophMethod = "Ghose" # Hydrophobic calculation method "Ghose" or "Crippen"
 
 
         # proporties of the loaded cage:
@@ -137,6 +137,20 @@ class cavity():
         distancesFromCOM = kdtxyzAtoms.query(pore_center_of_mass, k = None, p = 2)
         maxDistanceFromCOM = (distancesFromCOM[0][-1])
         pore_radius = distancesFromCOM[0][0]*self.distanceFromCOMFactor
+        '''
+        #Determine the atom types and correct the pore radius  with the atom radius of the cage. We use the max radius of the different cage atom types
+        atomTypesInCage = list(dict.fromkeys(self.atom_names))
+        print(atomTypesInCage)
+        atomTypesInCageRadius=[*map(vdw_radii.get, atomTypesInCage)]
+        print(atomTypesInCageRadius)
+        atomTypesInCageRadius = list(filter(lambda item: item is not None, atomTypesInCageRadius))
+        print(max(atomTypesInCageRadius))
+        pore_radius = pore_radius - max(atomTypesInCageRadius) - self.dummy_atom_radii
+        '''
+        #Determine the atom type of the calculated distance and correct the pore radius  with the atom radius and the dummy atom radius
+        pore_radius = pore_radius - 1.01*vdw_radii[self.atom_names[distancesFromCOM[1][0]]] - 1.01*self.dummy_atom_radii
+        if pore_radius < 0:
+            pore_radius = 0
 
         return pore_center_of_mass, pore_radius
 
@@ -364,12 +378,16 @@ class cavity():
 
         print_to_file(filename[:filename.find('.')]+".pdb", positions, atom_names, property_values)
         #Than pymol:
-        print_pymol_file(filename, property_values)
+        print_pymol_file(filename, property_values, self.dummy_atom_radii)
 
     def calculate_hydrophobicity(self):
 
         logger.info("--- Calculation of the hydrophobicity ---")
 
+        if self.hydrophMethod == "Ghose":
+            self.hydrophValues = hydrophValuesGhose1998
+        elif self.hydrophMethod == "Crippen":
+            self.hydrophValues = hydrophValuesCrippen1999
 
         assert self.volume is not None, "Cavity not calculated (use calculate_volume())" # Not sure, maybe just check and calculate volume (?)
 
@@ -457,6 +475,7 @@ class cavity():
 
         average_cavity_hydrophobicity = np.mean(self.hydrophobicity)
         total_cavity_hydrophobicity = average_cavity_hydrophobicity * self.volume
+        logger.info(f"Hydrophobicity method and distance function = {self.hydrophMethod}, {self.distance_function}")
         logger.info(f"Average cavity hydrophobicity = {average_cavity_hydrophobicity:.2f} A^-3")
         logger.info(f"Total cavity hydrophobicity = {total_cavity_hydrophobicity:.2f}")
         return average_cavity_hydrophobicity
@@ -475,22 +494,45 @@ def get_args():
     parser.add_argument("-f", default=None, help="input file (*pdb, *mol2, ...)")
     parser.add_argument("-o", default="cage_cavity.pdb", help="output file (*pdb, *mol2, ...)")
     parser.add_argument("-hydrophobicity", "-hydro", default=False, action='store_true', help="Calculate hydrophobicity")
+    parser.add_argument("-method", default="Ghose", help="Method to calculate the hydrophobicity: Ghose or Crippen")
     parser.add_argument("-pymol", default=False, action='store_true', help="create pymol script")
+    parser.add_argument("-distfun", default="Fauchere", help="Method to calculate the hydrophobicity: Audry, Fauchere, Fauchere2, OnlyValues")
+    parser.add_argument("-gr", default=1.0, help="Grid spacing resolution (Angstroms)")
+    parser.add_argument("-info", default=False, action='store_true', help="Print log INFO on the terminal")
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = get_args()
-
+    if args.info == True:
+        logger.setLevel('INFO')
     if args.f is None:
         print("input file (-f) is required")
         exit(0)
+    #Set the output filename as the input filename + "_cavity.pdb"
+    if args.o == "cage_cavity.pdb":
+        args.o = args.f[:args.f.find('.')]+"_cavity.pdb"
+    #Initialze the cavity
     cav = cavity()
+    #Set the grid spacing resolution from the args input. Default = 1 Angstrom
+    if args.gr:
+        cav.grid_spacing = float(args.gr)
+        cav.dummy_atom_radii = float(args.gr)
+    #Read the input file
     cav.read_file(args.f)
+    #Set the distance_threshold_for_90_deg_angle as 3 times the window radius
+    window_radius = cav.calculate_window()
+    cav.distance_threshold_for_90_deg_angle = window_radius*3
+    if cav.distance_threshold_for_90_deg_angle < 5:
+        cav.distance_threshold_for_90_deg_angle = 5
+    logger.info(f"Distance threshold for 90 deg angle = {cav.distance_threshold_for_90_deg_angle:.2f}")
     volume = cav.calculate_volume()
     print("Cage cavity volume = ", volume, " A3")
 
     if args.hydrophobicity==True:
+        cav.hydrophMethod = args.method
+        cav.distance_function = args.distfun #Audry, Fauchere, Fauchere2, OnlyValues
         average_cavity_hydrophobicity = cav.calculate_hydrophobicity()
+        print(f"Hydrophobicity method and distance function = {cav.hydrophMethod}, {cav.distance_function}")
         print(f"Average cavity hydrophobicity = {average_cavity_hydrophobicity:.2f} A^-3")
         print(f"Total cavity hydrophobicity = {average_cavity_hydrophobicity*volume:.2f}")
 
