@@ -55,8 +55,8 @@ def read_pdb(filename):
             if line.split()[0] == "HETATM" or line.split()[0] == "ATOM":
                 temp = np.array(list(map(float, line[30:54].split())))
                 positions.append(temp)
-                name_and_number = line[13:16].upper()
-                name_strip_number = re.match('([A-Z]+)', name_and_number).group(1)
+                name_and_number = line[12:16].upper()
+                name_strip_number = re.match('\s*([A-Z]+)', name_and_number).group(1)
                 atom_names.append(name_strip_number)
             elif line.split()[0] == "END":
                 break
