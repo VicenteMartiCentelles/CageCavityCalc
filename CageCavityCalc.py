@@ -9,6 +9,7 @@ import numpy as np
 import math
 import time
 from scipy.spatial import KDTree
+from sklearn.cluster import DBSCAN
 
 from data import hydrophValuesGhose1998, hydrophValuesCrippen1999, vdw_radii
 from calculations import sum_grid_volume
@@ -35,6 +36,7 @@ class cavity():
         compute_aromatic_contacts = False
         compute_hydrophobicity = True
         self.dummy_atom_radii = 1 #radius of the dummy atom use for the cavity calculations
+        self.clustering_to_remove_cavity_noise = False
         
         # With the modified code we can always use distanceFromCOMFactor = 1
         self.distanceFromCOMFactor = 1 #Distance from the center of mass factor 0-1 to consider spherical cavity, only useful for large cavities
@@ -253,12 +255,30 @@ class cavity():
             if dummy_atom.inside_cavity == 1:
                 xyzDummySet = calculatedGirdContactsKDTree.query(dummy_atom.pos, k=None, p=2, distance_upper_bound=1.1*self.grid_spacing)
                 dummy_atom.number_of_neighbors = len(xyzDummySet[1])
+        
+        if self.clustering_to_remove_cavity_noise == True:
+            cavity_dummy_atoms_positions = []
+            cavity_dummy_atoms_index = []
+            for i, dummy_atom in enumerate(calculatedGird.grid):
+                if dummy_atom.inside_cavity == 1:
+                    cavity_dummy_atoms_positions.append([dummy_atom.x,dummy_atom.y,dummy_atom.z])
+                    cavity_dummy_atoms_index.append(i)
+        
+            clusters = DBSCAN(eps=self.grid_spacing*1.1).fit(np.array(cavity_dummy_atoms_positions))
+            cluster_labels = clusters.labels_
+            number_of_clusters = len( np.unique(cluster_labels) )
+            number_of_noise = np.sum(np.array(cluster_labels) == -1, axis=0)
+            print('Clusters labels:', np.unique(cluster_labels))
+            print('Number of clusters: %d' % number_of_clusters)
+            print('Number of noise points: %d' % number_of_noise)
+            print('Saving only main cluster of the cavity')
+            #Create a dict with the calculatedGird index and cluster label
+            cavity_dummy_atoms_clusters = {cavity_dummy_atoms_index[i]: cluster_labels[i] for i in range(len(cavity_dummy_atoms_index))}
 
         for i, dummy_atom in enumerate(calculatedGird.grid):
             if (dummy_atom.inside_cavity == 1 and dummy_atom.overlapping_with_cage == 0):
                 # Remove isolated dummy atoms that only have one neighbors
-                if ( dummy_atom.number_of_neighbors > 1):
-
+                if ( (self.clustering_to_remove_cavity_noise == False and dummy_atom.number_of_neighbors > 1) or (self.clustering_to_remove_cavity_noise == True and dummy_atom.number_of_neighbors > 1 and cavity_dummy_atoms_clusters[i] == 0) ):
                     # This is some extra stuff
                     '''
                     if calculate_bfactor == True:
@@ -499,6 +519,7 @@ def get_args():
     parser.add_argument("-distfun", default="Fauchere", help="Method to calculate the hydrophobicity: Audry, Fauchere, Fauchere2, OnlyValues")
     parser.add_argument("-gr", default=1.0, help="Grid spacing resolution (Angstroms)")
     parser.add_argument("-info", default=False, action='store_true', help="Print log INFO on the terminal")
+    parser.add_argument("-cluster", default=False, action='store_true', help="Remove cavity noise by dbscan clustering")
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -517,6 +538,9 @@ if __name__ == '__main__':
     if args.gr:
         cav.grid_spacing = float(args.gr)
         cav.dummy_atom_radii = float(args.gr)
+    #Set the
+    if args.cluster:
+        cav.clustering_to_remove_cavity_noise = args.cluster
     #Read the input file
     cav.read_file(args.f)
     #Set the distance_threshold_for_90_deg_angle as 3 times the window radius
