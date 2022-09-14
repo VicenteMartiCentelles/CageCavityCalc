@@ -268,6 +268,7 @@ class cavity():
             cluster_labels = clusters.labels_
             number_of_clusters = len( np.unique(cluster_labels) )
             number_of_noise = np.sum(np.array(cluster_labels) == -1, axis=0)
+            largest_cluster = max(set(cluster_labels.tolist()), key = cluster_labels.tolist().count)
             print('Clusters labels:', np.unique(cluster_labels))
             print('Number of clusters: %d' % number_of_clusters)
             print('Number of noise points: %d' % number_of_noise)
@@ -278,7 +279,7 @@ class cavity():
         for i, dummy_atom in enumerate(calculatedGird.grid):
             if (dummy_atom.inside_cavity == 1 and dummy_atom.overlapping_with_cage == 0):
                 # Remove isolated dummy atoms that only have one neighbors
-                if ( (self.clustering_to_remove_cavity_noise == False and dummy_atom.number_of_neighbors > 1) or (self.clustering_to_remove_cavity_noise == True and dummy_atom.number_of_neighbors > 1 and cavity_dummy_atoms_clusters[i] == 0) ):
+                if ( (self.clustering_to_remove_cavity_noise == False and dummy_atom.number_of_neighbors > 1) or (self.clustering_to_remove_cavity_noise == True and dummy_atom.number_of_neighbors > 1 and cavity_dummy_atoms_clusters[i] == largest_cluster) ):
                     # This is some extra stuff
                     '''
                     if calculate_bfactor == True:
