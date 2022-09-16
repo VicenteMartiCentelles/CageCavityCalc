@@ -36,7 +36,7 @@ class cavity():
         compute_aromatic_contacts = False
         compute_hydrophobicity = True
         self.dummy_atom_radii = 1 #radius of the dummy atom use for the cavity calculations
-        self.clustering_to_remove_cavity_noise = False
+        self.clustering_to_remove_cavity_noise = "false" #"Size" select largest cluster, "Dist" select closte cluster to the center
         
         # With the modified code we can always use distanceFromCOMFactor = 1
         self.distanceFromCOMFactor = 1 #Distance from the center of mass factor 0-1 to consider spherical cavity, only useful for large cavities
@@ -128,7 +128,10 @@ class cavity():
         logger.info(f"--- Total time {(time.time() - start_time):.0f} seconds ---" )
         return self.volume
 
-
+    def calculate_center_of_mass(self):
+        pore_center_of_mass = np.array(sum(self.atom_masses[i]*self.positions[i] for i in range(self.n_atoms)))/sum(self.atom_masses)
+        return pore_center_of_mass.tolist()
+        
     def calculate_center_and_radius(self):
         #Calculate the center of mass of the cage using RDKit
         pore_center_of_mass = np.array(sum(self.atom_masses[i]*self.positions[i] for i in range(self.n_atoms)))/sum(self.atom_masses)
@@ -256,7 +259,7 @@ class cavity():
                 xyzDummySet = calculatedGirdContactsKDTree.query(dummy_atom.pos, k=None, p=2, distance_upper_bound=1.1*self.grid_spacing)
                 dummy_atom.number_of_neighbors = len(xyzDummySet[1])
         
-        if self.clustering_to_remove_cavity_noise == True:
+        if self.clustering_to_remove_cavity_noise != "false":
             cavity_dummy_atoms_positions = []
             cavity_dummy_atoms_index = []
             for i, dummy_atom in enumerate(calculatedGird.grid):
@@ -272,14 +275,44 @@ class cavity():
             print('Clusters labels:', np.unique(cluster_labels))
             print('Number of clusters: %d' % number_of_clusters)
             print('Number of noise points: %d' % number_of_noise)
-            print('Saving only main cluster of the cavity')
+
             #Create a dict with the calculatedGird index and cluster label
             cavity_dummy_atoms_clusters = {cavity_dummy_atoms_index[i]: cluster_labels[i] for i in range(len(cavity_dummy_atoms_index))}
+        
 
+        if self.clustering_to_remove_cavity_noise == "dist":
+            inv_map_cavity_dummy_atoms_clusters = {}
+            for k, v in cavity_dummy_atoms_clusters.items():
+                inv_map_cavity_dummy_atoms_clusters[v] = inv_map_cavity_dummy_atoms_clusters.get(v, []) + [k]
+            
+            all_grid_dummy_atoms_positions = []
+            for i, dummy_atom in enumerate(calculatedGird.grid):
+                all_grid_dummy_atoms_positions.append([dummy_atom.x,dummy_atom.y,dummy_atom.z])
+            all_grid_dummy_atoms_positions = np.array(all_grid_dummy_atoms_positions)
+            
+            cluster_centroids = []
+            cluster_centroids_distance_to_COM = []
+            center_of_mass = self.calculate_center_of_mass()
+            for i in np.unique(cluster_labels):
+                cluster_centroids.append(np.mean(all_grid_dummy_atoms_positions[inv_map_cavity_dummy_atoms_clusters[i]], axis=0))
+            
+            for i in cluster_centroids:
+                cluster_centroids_distance_to_COM.append(np.linalg.norm(i-center_of_mass))
+            
+            print(cluster_centroids_distance_to_COM)
+            min_cluster_centroids_distance_to_COM = cluster_centroids_distance_to_COM[1:].index(min(cluster_centroids_distance_to_COM[1:]))
+
+        if self.clustering_to_remove_cavity_noise == "size":
+            print('Saving only largest cluster of the cavity')
+            print('Number of points in the cluster: %d' % cluster_labels.tolist().count(largest_cluster) )
+        elif self.clustering_to_remove_cavity_noise == "dist":
+            print('Saving only cluster closest to the center of mass of the cavity')
+            print('Number of points in the cluster: %d' % cluster_labels.tolist().count(min_cluster_centroids_distance_to_COM) )
+            
         for i, dummy_atom in enumerate(calculatedGird.grid):
             if (dummy_atom.inside_cavity == 1 and dummy_atom.overlapping_with_cage == 0):
                 # Remove isolated dummy atoms that only have one neighbors
-                if ( (self.clustering_to_remove_cavity_noise == False and dummy_atom.number_of_neighbors > 1) or (self.clustering_to_remove_cavity_noise == True and dummy_atom.number_of_neighbors > 1 and cavity_dummy_atoms_clusters[i] == largest_cluster) ):
+                if ( (self.clustering_to_remove_cavity_noise == "false" and dummy_atom.number_of_neighbors > 1) or (self.clustering_to_remove_cavity_noise == "size" and dummy_atom.number_of_neighbors > 1 and cavity_dummy_atoms_clusters[i] == largest_cluster) or (self.clustering_to_remove_cavity_noise == "dist" and dummy_atom.number_of_neighbors > 1 and cavity_dummy_atoms_clusters[i] == min_cluster_centroids_distance_to_COM)):
                     # This is some extra stuff
                     '''
                     if calculate_bfactor == True:
@@ -520,7 +553,7 @@ def get_args():
     parser.add_argument("-distfun", default="Fauchere", help="Method to calculate the hydrophobicity: Audry, Fauchere, Fauchere2, OnlyValues")
     parser.add_argument("-gr", default=1.0, help="Grid spacing resolution (Angstroms)")
     parser.add_argument("-info", default=False, action='store_true', help="Print log INFO on the terminal")
-    parser.add_argument("-cluster", default=False, action='store_true', help="Remove cavity noise by dbscan clustering")
+    parser.add_argument("-cluster", default="false", help="Remove cavity noise by dbscan clustering (size or dist)")
     return parser.parse_args()
 
 if __name__ == '__main__':
