@@ -15,12 +15,14 @@ from data import hydrophValuesGhose1998, hydrophValuesCrippen1999, vdw_radii
 from calculations import sum_grid_volume
 from grid_classes import GridPoint, CageGrid
 from hydrophobicity import assignHydrophobicValuesToCageAtoms, calc_single_hydrophobicity
+from electrostatics import calculate_partial_charges
 
 from input_output import read_positions_and_atom_names_from_file, print_to_file, read_cgbind, read_mdanalysis, print_pymol_file, convert_to_mol2
 
 from window_size import get_max_escape_sphere
 
 from log import logger
+from scipy.spatial import distance_matrix
 
 
 class cavity():
@@ -71,6 +73,7 @@ class cavity():
         self.hydrophobicity = []
         self.aromatic_constacts = []
         self.solvent_accessibility = []
+        self.esp_grid = []
 
 
     def read_file(self, filename):
@@ -399,6 +402,9 @@ class cavity():
             property_values = np.append(np.zeros((len(self.positions))), self.solvent_accessibility)
         elif self.compute_hydrophobicity == True or property_name == "hydrophobicity" or property_name == "hydro" or property_name == "h":
             property_values = np.append(np.zeros((len(self.positions))), self.hydrophobicity)
+        elif property_name == "electrostatics" or property_name == "esp":
+            property_values = np.append(np.zeros((len(self.positions))), self.esp_grid)
+
         return property_values
 
     def print_to_file(self, filename, property_name = None):
@@ -432,7 +438,7 @@ class cavity():
 
         print_to_file(filename[:filename.find('.')]+".pdb", positions, atom_names, property_values)
         #Than pymol:
-        print_pymol_file(filename, property_values, self.dummy_atom_radii)
+        print_pymol_file(filename, property_values[len(self.positions):], self.dummy_atom_radii)
 
     def calculate_hydrophobicity(self):
 
@@ -533,6 +539,22 @@ class cavity():
         logger.info(f"Average cavity hydrophobicity = {average_cavity_hydrophobicity:.2f} A^-3")
         logger.info(f"Total cavity hydrophobicity = {total_cavity_hydrophobicity:.2f}")
         return average_cavity_hydrophobicity
+
+    def calculate_esp(self, metal_name=None, metal_charge=None, method='eem', max_memory=1e9):
+
+
+        partial_charges = calculate_partial_charges(self.positions, self.atom_names, metal_name=metal_name, metal_charge=metal_charge)
+
+        if len(self.dummy_atoms_positions) * len(self.positions) * 8 < max_memory:
+            dist_matrix = distance_matrix(self.dummy_atoms_positions, self.positions)
+            grid_charges = (1 / dist_matrix).dot(partial_charges)
+        else:
+            grid_charges = np.zeros(len(self.dummy_atoms_positions))
+            for idx, dummy_atom in enumerate(self.dummy_atoms_positions):
+                dist_matrix = distance_matrix([dummy_atom], self.positions)[0]
+                grid_charges[idx] = np.sum(partial_charges * (1 / dist_matrix))
+
+        self.esp_grid = grid_charges
 
     def calculate_window(self):
 
