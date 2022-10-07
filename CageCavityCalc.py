@@ -438,7 +438,10 @@ class cavity():
 
         print_to_file(filename[:filename.find('.')]+".pdb", positions, atom_names, property_values)
         #Than pymol:
-        print_pymol_file(filename, property_values[len(self.positions):], self.dummy_atom_radii)
+        if property_values is not None:
+            print_pymol_file(filename, property_values[len(self.positions):], self.dummy_atom_radii)
+        else:
+            print_pymol_file(filename, None, self.dummy_atom_radii)
 
     def calculate_hydrophobicity(self):
 
