@@ -122,6 +122,10 @@ def read_mdanalysis(syst):
 
     return np.array(positions), atom_names, atom_names_to_masses(atom_names), atom_names_to_vdw(atom_names)
 
+def read_positions_and_atom_names_from_array(positions, atom_names):
+    print("AAAA")
+    return positions, atom_names, atom_names_to_masses(atom_names), atom_names_to_vdw(atom_names)
+
 
 # ----------------- OUTPUT -------------------------
 
@@ -243,7 +247,9 @@ def print_pymol_file(filename, property_values=None, dummy_atom_radii=1):
         ######################################################################
         ###        Open the saved cavity in PyMol
         ######################################################################
-        '''
+
+
+def run_pymol():
         # pymol launching: quiet (-q)
         import pymol
         pymol.pymol_argv = ['pymol','-q']
@@ -274,4 +280,3 @@ def print_pymol_file(filename, property_values=None, dummy_atom_radii=1):
         cmd.zoom("cage")
 
         cmd.save(cagePDBout1.replace(".pdb", ".pse"))
-        '''

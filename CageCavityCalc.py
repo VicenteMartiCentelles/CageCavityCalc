@@ -17,7 +17,7 @@ from grid_classes import GridPoint, CageGrid
 from hydrophobicity import assignHydrophobicValuesToCageAtoms, calc_single_hydrophobicity
 from electrostatics import calculate_partial_charges
 
-from input_output import read_positions_and_atom_names_from_file, print_to_file, read_cgbind, read_mdanalysis, print_pymol_file, convert_to_mol2
+from input_output import read_positions_and_atom_names_from_file, read_positions_and_atom_names_from_array, print_to_file, read_cgbind, read_mdanalysis, print_pymol_file, convert_to_mol2
 
 from window_size import get_max_escape_sphere
 
@@ -86,6 +86,16 @@ class cavity():
         self.volume = None
         self.dummy_atoms = []
 
+    def read_pos_name_array(self, positions, names):
+        logger.info("--- Reading the arrays ---")
+        print("--- Reading the arrays ---")
+        print(np.sum([2,3]))
+        print("ADSDSA")
+        self.positions, self.atom_names, self.atom_masses, self.atom_vdw = read_positions_and_atom_names_from_array(np.array(positions), np.array(names))
+        self.n_atoms = len(self.positions)
+        # Reset volume if the file is read  (in case it was calculated for the diffrent file)
+        self.volume = None
+        self.dummy_atoms = []
 
 
 
