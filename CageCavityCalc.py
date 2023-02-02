@@ -88,16 +88,11 @@ class cavity():
 
     def read_pos_name_array(self, positions, names):
         logger.info("--- Reading the arrays ---")
-        print("--- Reading the arrays ---")
-        print(np.sum([2,3]))
-        print("ADSDSA")
         self.positions, self.atom_names, self.atom_masses, self.atom_vdw = read_positions_and_atom_names_from_array(np.array(positions), np.array(names))
         self.n_atoms = len(self.positions)
         # Reset volume if the file is read  (in case it was calculated for the diffrent file)
         self.volume = None
         self.dummy_atoms = []
-
-
 
     def read_cgbind(self, cgbind_cage):
         self.positions, self.atom_names, self.atom_masses, self.atom_vdw = read_cgbind(cgbind_cage)
@@ -407,10 +402,10 @@ class cavity():
         property_values = None
 
         if property_name == "aromaticity" or property_name == "aromatic_contast" or property_name == "a":
-            property_values = np.append(np.zeros((len(self.positions))), self.hydrophobicity)
+            property_values = np.append(np.zeros((len(self.positions))), self.aromatic_constacts)
         elif property_name == "solvent_accessibility" or property_name == "solvent" or property_name == "s":
             property_values = np.append(np.zeros((len(self.positions))), self.solvent_accessibility)
-        elif self.compute_hydrophobicity == True or property_name == "hydrophobicity" or property_name == "hydro" or property_name == "h":
+        elif property_name == "hydrophobicity" or property_name == "hydro" or property_name == "h":
             property_values = np.append(np.zeros((len(self.positions))), self.hydrophobicity)
         elif property_name == "electrostatics" or property_name == "esp":
             property_values = np.append(np.zeros((len(self.positions))), self.esp_grid)
