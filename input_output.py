@@ -123,8 +123,9 @@ def read_mdanalysis(syst):
     return np.array(positions), atom_names, atom_names_to_masses(atom_names), atom_names_to_vdw(atom_names)
 
 def read_positions_and_atom_names_from_array(positions, atom_names):
-    print("AAAA")
-    return positions, atom_names, atom_names_to_masses(atom_names), atom_names_to_vdw(atom_names)
+
+    just_atom_names = [re.match('([A-Z]+)', name_and_number).group(1) for name_and_number in atom_names]
+    return positions, just_atom_names, atom_names_to_masses(just_atom_names), atom_names_to_vdw(just_atom_names)
 
 
 # ----------------- OUTPUT -------------------------

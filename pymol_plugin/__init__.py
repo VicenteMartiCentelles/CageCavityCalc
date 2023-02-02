@@ -1,19 +1,14 @@
-'''
-PyMOL Demo Plugin
 
-The plugin resembles the old "Rendering Plugin" from Michael Lerner, which
-was written with Tkinter instead of PyQt.
 
-(c) Schrodinger, Inc.
-
-License: BSD-2-Clause
-'''
 
 from __future__ import absolute_import
 from __future__ import print_function
 
-# Avoid importing "expensive" modules here (e.g. scipy), since this code is
-# executed on PyMOL's startup. Only import such modules inside functions.
+
+#import sys
+#sys.path.insert(0, '/u/fd/chem1540/github/CageCavityCalc/')
+
+#from CageCavityCalc import cavity
 
 import os
 
@@ -97,10 +92,16 @@ def make_dialog():
         method = form.hydro_method.currentText()
         dist = form.hydro_dist.currentText()
         cluster = form.largest_check.isChecked()
+
+        #form.calculate_volume.setText("Calculating... it might take a while (~1 min)")
         
         print(f"Running CageCavCalc with selection={selection}, grid_size={grid_size:}, hydro={hydro:}, aro={aro:}, sas={sas:},esp={esp:}, method={method:}, dist={dist:}, cluster={cluster:}")
 
         dialog.close()
+
+        show_cavity_in_pymol(selection, grid_size, hydro, aro, sas, esp, method, dist, cluster)
+
+
 
 
     def change_slider():
@@ -116,7 +117,6 @@ def make_dialog():
            slider=24
         form.grid_slider.setValue(slider)
 
-
     # hook up button callbacks
     form.calculate_volume.clicked.connect(run)
     #form.button_browse.clicked.connect(browse_filename)
@@ -125,3 +125,83 @@ def make_dialog():
     form.grid_edit.editingFinished.connect(change_edit)
 
     return dialog
+
+
+def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=False, esp=False, method='Ghose', dist="Fauchere", cluster=False):
+    import CageCavityCalc
+    from pymol import cmd
+    from pymol import stored
+    import chempy
+
+    #print(
+    #    f"Running CageCavCalc with grid_size={grid_size:}, hydro={hydro:}, aro={aro:}, sas={sas:}, method={method:}, dist={dist:}, cluster={cluster:}")
+    cav = CageCavityCalc.cavity()
+
+
+
+    # this array will be used to hold the coordinates.  It
+    # has access to PyMOL objects and, we have access to it.
+
+    # let's just get the alpha carbons, so make the
+    # selection just for them
+    # userSelection = userSelection + " and n. CA"
+
+    # iterate over state 1, or the userSelection -- this just means
+    # for each item in the selection do what the next parameter says.
+    # And, that is to append the (x,y,z) coordinates to the stored.alphaCarbon
+    # array.
+    stored.pos = []
+    stored.names = []
+
+    cmd.iterate_state(1, selection, "stored.pos.append([x,y,z])")  # TODO this should not be all but selected from list
+    cmd.iterate_state(1, selection, "stored.names.append(name)")
+    cav.read_pos_name_array(stored.pos, stored.names)
+    volume = cav.calculate_volume()
+    print("Volume of the cavity=", volume)
+
+    cmd.alter('name D', 'vdw="1.0"')
+
+    index_to_propery = {0: "aromaticity", 1: "solvent_accessibility", 2: "hydrophobicity", 3: "electrostatics"}
+
+    if hydro or aro or sas:
+        cav.calculate_hydrophobicity()
+    if esp:
+        cav.calculate_esp() # this is problematic if there is metal
+
+    for idx, condition in enumerate([aro, sas, hydro, esp]):
+        if condition:
+            property_name = index_to_propery[idx]
+            property_values = list(cav.get_property_values(property_name))
+            model = cmd.get_model(None)
+
+            #print(len(property_values), "==", len(cav.dummy_atoms_positions))
+
+            for property_value, position in zip(property_values[cav.n_atoms:], cav.dummy_atoms_positions):
+                # p\rint(property_value, position)
+                atom = chempy.Atom()
+                atom.name = 'D'
+                atom.coord = position
+                atom.b = property_value
+                model.add_atom(atom)
+
+            # cmd.alter('name D', 'vdw="1.0"') # TODO do we need this
+            cmd.load_model(model, property_name)
+            cmd.show_as("surface", selection=property_name)
+
+            # print(property_name, property_values)
+            cmd.spectrum("b", selection=property_name, palette="blue_white_red", minimum=min(property_values),
+                         maximum=max(property_values))
+            cmd.ramp_new("ramp" + property_name, property_name,
+                         [min(property_values), (min(property_values) + max(property_values)) / 2,
+                          max(property_values)], ["blue", "white", "red"])
+            cmd.recolor()
+
+    # just volume will be last
+    model = cmd.get_model(None)
+    for position in cav.dummy_atoms_positions:
+        atom = chempy.Atom()
+        atom.name = 'D'
+        atom.coord = position
+        model.add_atom(atom)
+    cmd.load_model(model, "cavity")
+    cmd.show_as("surface", selection="cavity")
