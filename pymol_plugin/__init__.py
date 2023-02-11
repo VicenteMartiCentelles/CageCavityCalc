@@ -31,8 +31,9 @@ def run_plugin_gui():
     '''
     global dialog
 
-    if dialog is None:
-        dialog = make_dialog()
+#    if dialog is None:  # If the dialos is not created each time, the list of molecules is not updatd
+#        dialog = make_dialog()
+    dialog = make_dialog() #creating the dialog each time that the plugin is run, the list of new molecules is updated without requiring to close pymol
 
     dialog.show()
 
@@ -158,7 +159,6 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
     cav.read_pos_name_array(stored.pos, stored.names)
     volume = cav.calculate_volume()
     print("Volume of the cavity=", volume, "A^3")
-
     index_to_propery = {0: "aromaticity", 1: "solvent_accessibility", 2: "hydrophobicity", 3: "electrostatics"}
 
     if hydro or aro or sas:
@@ -182,13 +182,13 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
                 atom.b = property_value
                 model.add_atom(atom)
 
-            cmd.load_model(model, property_name)
-            cmd.show_as("surface", selection=property_name)
+            cmd.load_model(model, property_name+"_"+str(selection))
+            cmd.show_as("surface", selection=property_name+"_"+str(selection))
 
             # print(property_name, property_values)
-            cmd.spectrum("b", selection=property_name, palette="blue_white_red", minimum=min(property_values),
+            cmd.spectrum("b", selection=property_name+"_"+str(selection), palette="blue_white_red", minimum=min(property_values),
                          maximum=max(property_values))
-            cmd.ramp_new("ramp" + property_name, property_name,
+            cmd.ramp_new("ramp_" + property_name+"_"+str(selection), property_name+"_"+str(selection),
                          [min(property_values), (min(property_values) + max(property_values)) / 2,
                           max(property_values)], ["blue", "white", "red"])
             cmd.recolor()
@@ -200,6 +200,6 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
         atom.name = 'D'
         atom.coord = position
         model.add_atom(atom)
-    cmd.load_model(model, "cavity")
+    cmd.load_model(model, "cavity_"+str(volume)+"A3_"+str(selection))
     cmd.alter('name D', 'vdw="'+str(grid_size)+'"')
-    cmd.show_as("surface", selection="cavity")
+    cmd.show_as("surface", selection="cavity_"+str(volume)+"A3_"+str(selection))
