@@ -136,8 +136,8 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
     #print(
     #    f"Running CageCavCalc with grid_size={grid_size:}, hydro={hydro:}, aro={aro:}, sas={sas:}, method={method:}, dist={dist:}, cluster={cluster:}")
     cav = CageCavityCalc.cavity()
-
-
+    cav.dummy_atom_radii = grid_size
+    cav.grid_spacing = grid_size
 
     # this array will be used to hold the coordinates.  It
     # has access to PyMOL objects and, we have access to it.
@@ -157,9 +157,7 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
     cmd.iterate_state(1, selection, "stored.names.append(name)")
     cav.read_pos_name_array(stored.pos, stored.names)
     volume = cav.calculate_volume()
-    print("Volume of the cavity=", volume)
-
-    cmd.alter('name D', 'vdw="1.0"')
+    print("Volume of the cavity=", volume, "A^3")
 
     index_to_propery = {0: "aromaticity", 1: "solvent_accessibility", 2: "hydrophobicity", 3: "electrostatics"}
 
@@ -177,14 +175,13 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
             #print(len(property_values), "==", len(cav.dummy_atoms_positions))
 
             for property_value, position in zip(property_values[cav.n_atoms:], cav.dummy_atoms_positions):
-                # p\rint(property_value, position)
+                # print(property_value, position)
                 atom = chempy.Atom()
                 atom.name = 'D'
                 atom.coord = position
                 atom.b = property_value
                 model.add_atom(atom)
 
-            # cmd.alter('name D', 'vdw="1.0"') # TODO do we need this
             cmd.load_model(model, property_name)
             cmd.show_as("surface", selection=property_name)
 
@@ -204,4 +201,5 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
         atom.coord = position
         model.add_atom(atom)
     cmd.load_model(model, "cavity")
+    cmd.alter('name D', 'vdw="'+str(grid_size)+'"')
     cmd.show_as("surface", selection="cavity")
