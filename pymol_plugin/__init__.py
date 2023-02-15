@@ -209,3 +209,7 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
     cmd.load_model(model, "cavity_"+str(volume)+"A3_"+str(grid_size)+"A_"+str(selection))
     cmd.alter('name D', 'vdw="'+str(grid_size)+'"')
     cmd.show_as("surface", selection="cavity_"+str(volume)+"A3_"+str(grid_size)+"A_"+str(selection))
+    
+    cmd.clip("atoms", 5, "All")
+    cmd.orient(selection)
+    cmd.zoom(selection)
