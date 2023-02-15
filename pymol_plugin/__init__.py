@@ -157,6 +157,12 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
     cmd.iterate_state(1, selection, "stored.pos.append([x,y,z])")  # TODO this should not be all but selected from list
     cmd.iterate_state(1, selection, "stored.names.append(name)")
     cav.read_pos_name_array(stored.pos, stored.names)
+    #Set the distance_threshold_for_90_deg_angle as 3 times the window radius
+    window_radius = cav.calculate_window()
+    cav.distance_threshold_for_90_deg_angle = window_radius*3
+    if cav.distance_threshold_for_90_deg_angle < 5:
+        cav.distance_threshold_for_90_deg_angle = 5
+    #print(f"Distance threshold for 90 deg angle = {cav.distance_threshold_for_90_deg_angle:.2f}")
     volume = cav.calculate_volume()
     print("Volume of the cavity=", volume, "A^3")
     index_to_propery = {0: "aromaticity", 1: "solvent_accessibility", 2: "hydrophobicity", 3: "electrostatics"}
@@ -200,6 +206,6 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
         atom.name = 'D'
         atom.coord = position
         model.add_atom(atom)
-    cmd.load_model(model, "cavity_"+str(volume)+"A3_"+str(selection))
+    cmd.load_model(model, "cavity_"+str(volume)+"A3_"+str(grid_size)+"A_"+str(selection))
     cmd.alter('name D', 'vdw="'+str(grid_size)+'"')
-    cmd.show_as("surface", selection="cavity_"+str(volume)+"A3_"+str(selection))
+    cmd.show_as("surface", selection="cavity_"+str(volume)+"A3_"+str(grid_size)+"A_"+str(selection))
