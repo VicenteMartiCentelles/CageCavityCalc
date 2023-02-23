@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>417</width>
-    <height>188</height>
+    <width>435</width>
+    <height>285</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QPushButton" name="calculate_volume">
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>160</y>
+     <x>10</x>
+     <y>250</y>
      <width>411</width>
      <height>23</height>
     </rect>
@@ -36,7 +36,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>hydrophobicity</string>
+    <string>Hydrophobicity</string>
    </property>
    <property name="checked">
     <bool>true</bool>
@@ -52,7 +52,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>closest to center</string>
+    <string>Closest to center</string>
    </property>
    <property name="checked">
     <bool>false</bool>
@@ -68,7 +68,10 @@
     </rect>
    </property>
    <property name="text">
-    <string>largest</string>
+    <string>Largest</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
    </property>
    <property name="checked">
     <bool>true</bool>
@@ -77,9 +80,9 @@
   <widget class="QSlider" name="grid_slider">
    <property name="geometry">
     <rect>
-     <x>80</x>
+     <x>100</x>
      <y>40</y>
-     <width>271</width>
+     <width>251</width>
      <height>20</height>
     </rect>
    </property>
@@ -111,12 +114,12 @@
     <rect>
      <x>10</x>
      <y>40</y>
-     <width>61</width>
+     <width>81</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>Grid size:</string>
+    <string>Grid size (Å):</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="grid_edit">
@@ -174,7 +177,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>aromatic contacts</string>
+    <string>Aromatic contacts</string>
    </property>
    <property name="checked">
     <bool>true</bool>
@@ -274,6 +277,92 @@
    <property name="checked">
     <bool>true</bool>
    </property>
+  </widget>
+  <widget class="QGroupBox" name="groupBox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>160</y>
+     <width>321</width>
+     <height>81</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Threshold distance for 90 deg cavity</string>
+   </property>
+   <widget class="QRadioButton" name="dist_90_auto">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>201</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Auto (X times window size):</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="dist_90_manual">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Manual distance (Å):</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="dist_90_auto_value">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>20</y>
+      <width>62</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="decimals">
+     <number>1</number>
+    </property>
+    <property name="minimum">
+     <double>0.000000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>0.100000000000000</double>
+    </property>
+    <property name="value">
+     <double>2.000000000000000</double>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="dist_90_manual_value">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>50</y>
+      <width>62</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="decimals">
+     <number>1</number>
+    </property>
+    <property name="minimum">
+     <double>2.000000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>40.000000000000000</double>
+    </property>
+    <property name="value">
+     <double>5.000000000000000</double>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>

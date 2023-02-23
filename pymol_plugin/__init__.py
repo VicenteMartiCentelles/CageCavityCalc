@@ -93,6 +93,11 @@ def make_dialog():
         method = form.hydro_method.currentText()
         dist = form.hydro_dist.currentText()
         cluster = form.largest_check.isChecked()
+        
+        dist_90_a = form.dist_90_auto.isChecked()
+        dist_90_a_v = float(form.dist_90_auto_value.text()) 
+        dist_90_m = form.dist_90_manual.isChecked()
+        dist_90_m_v = float(form.dist_90_manual_value.text())
 
         #form.calculate_volume.setText("Calculating... it might take a while (~1 min)")
         
@@ -100,7 +105,7 @@ def make_dialog():
 
         dialog.close()
 
-        show_cavity_in_pymol(selection, grid_size, hydro, aro, sas, esp, method, dist, cluster)
+        show_cavity_in_pymol(selection, grid_size, hydro, aro, sas, esp, method, dist, cluster, dist_90_a, dist_90_a_v, dist_90_m, dist_90_m_v)
 
 
 
@@ -128,7 +133,7 @@ def make_dialog():
     return dialog
 
 
-def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=False, esp=False, method='Ghose', dist="Fauchere", cluster=False):
+def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=False, esp=False, method='Ghose', dist="Fauchere", cluster=False, dist_90_a=True, dist_90_a_v=2.0, dist_90_m=False, dist_90_m_v=5.0):
     import CageCavityCalc
     from pymol import cmd
     from pymol import stored
@@ -158,14 +163,24 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
     cmd.iterate_state(1, selection, "stored.names.append(name)")
     cav.read_pos_name_array(stored.pos, stored.names)
     #Set the distance_threshold_for_90_deg_angle as 3 times the window radius
-    window_radius = cav.calculate_window()
-    cav.distance_threshold_for_90_deg_angle = window_radius*3
+    if dist_90_a == True:
+        dist_90_text = "Auto"
+        window_radius = cav.calculate_window()
+        cav.distance_threshold_for_90_deg_angle = window_radius*dist_90_a_v
+        print(f"Distance threshold for 90 deg angle = {cav.distance_threshold_for_90_deg_angle:.2f} A")
+    if dist_90_m == True:
+        dist_90_text = "Manual"
+        cav.distance_threshold_for_90_deg_angle = dist_90_m_v
     if cav.distance_threshold_for_90_deg_angle < 5:
         cav.distance_threshold_for_90_deg_angle = 5
-    #print(f"Distance threshold for 90 deg angle = {cav.distance_threshold_for_90_deg_angle:.2f}")
+    dist_90_text = dist_90_text+str(round(cav.distance_threshold_for_90_deg_angle,1))
     volume = cav.calculate_volume()
-    print("Volume of the cavity=", volume, "A^3")
+    print("Volume of the cavity=", volume, " A^3")
+    
+    cavity_text = str(round(volume,2))+"A3_"+str(grid_size)+"A_"+str(selection)+"_"+dist_90_text
     index_to_propery = {0: "aromaticity", 1: "solvent_accessibility", 2: "hydrophobicity", 3: "electrostatics"}
+    
+
 
     if hydro or aro or sas:
         cav.calculate_hydrophobicity()
@@ -188,13 +203,13 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
                 atom.b = property_value
                 model.add_atom(atom)
 
-            cmd.load_model(model, property_name+"_"+str(selection))
-            cmd.show_as("surface", selection=property_name+"_"+str(selection))
+            cmd.load_model(model, property_name+"_"+str(selection)+"_"+cavity_text)
+            cmd.show_as("surface", selection=property_name+"_"+str(selection)+"_"+cavity_text)
 
             # print(property_name, property_values)
-            cmd.spectrum("b", selection=property_name+"_"+str(selection), palette="blue_white_red", minimum=min(property_values),
+            cmd.spectrum("b", selection=property_name+"_"+str(selection)+"_"+cavity_text, palette="blue_white_red", minimum=min(property_values),
                          maximum=max(property_values))
-            cmd.ramp_new("ramp_" + property_name+"_"+str(selection), property_name+"_"+str(selection),
+            cmd.ramp_new("ramp_" + property_name+"_"+str(selection)+"_"+cavity_text, property_name+"_"+str(selection)+"_"+cavity_text,
                          [min(property_values), (min(property_values) + max(property_values)) / 2,
                           max(property_values)], ["blue", "white", "red"])
             cmd.recolor()
@@ -206,9 +221,9 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
         atom.name = 'D'
         atom.coord = position
         model.add_atom(atom)
-    cmd.load_model(model, "cavity_"+str(volume)+"A3_"+str(grid_size)+"A_"+str(selection))
+    cmd.load_model(model, "cavity_"+cavity_text)
     cmd.alter('name D', 'vdw="'+str(grid_size)+'"')
-    cmd.show_as("surface", selection="cavity_"+str(volume)+"A3_"+str(grid_size)+"A_"+str(selection))
+    cmd.show_as("surface", selection="cavity_"+cavity_text)
     
     cmd.clip("atoms", 5, "All")
     cmd.orient(selection)
