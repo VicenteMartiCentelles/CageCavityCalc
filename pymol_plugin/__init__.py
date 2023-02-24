@@ -92,7 +92,13 @@ def make_dialog():
         esp = form.esp_check.isChecked()
         method = form.hydro_method.currentText()
         dist = form.hydro_dist.currentText()
-        cluster = form.largest_check.isChecked()
+
+        if form.volume_largest_check.isChecked() == True:
+            cluster_text = "size"
+        if form.volume_close_to_center_check.isChecked() == True:
+            cluster_text = "dist"        
+        if form.volume_all_check.isChecked() == True:
+            cluster_text = "false"
         
         dist_90_a = form.dist_90_auto.isChecked()
         dist_90_a_v = float(form.dist_90_auto_value.text()) 
@@ -101,11 +107,11 @@ def make_dialog():
 
         #form.calculate_volume.setText("Calculating... it might take a while (~1 min)")
         
-        print(f"Running CageCavCalc with selection={selection}, grid_size={grid_size:}, hydro={hydro:}, aro={aro:}, sas={sas:},esp={esp:}, method={method:}, dist={dist:}, cluster={cluster:}")
+        print(f"Running CageCavCalc with selection={selection}, grid_size={grid_size:}, hydro={hydro:}, aro={aro:}, sas={sas:},esp={esp:}, method={method:}, dist={dist:}, cluster={cluster_text:}")
 
-        dialog.close()
+        #dialog.close()
 
-        show_cavity_in_pymol(selection, grid_size, hydro, aro, sas, esp, method, dist, cluster, dist_90_a, dist_90_a_v, dist_90_m, dist_90_m_v)
+        show_cavity_in_pymol(selection, grid_size, hydro, aro, sas, esp, method, dist, cluster_text, dist_90_a, dist_90_a_v, dist_90_m, dist_90_m_v)
 
 
 
@@ -133,17 +139,19 @@ def make_dialog():
     return dialog
 
 
-def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=False, esp=False, method='Ghose', dist="Fauchere", cluster=False, dist_90_a=True, dist_90_a_v=2.0, dist_90_m=False, dist_90_m_v=5.0):
+def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=False, esp=False, method='Ghose', dist="Fauchere", cluster="false", dist_90_a=True, dist_90_a_v=2.0, dist_90_m=False, dist_90_m_v=5.0):
     import CageCavityCalc
     from pymol import cmd
     from pymol import stored
     import chempy
 
     #print(
-    #    f"Running CageCavCalc with grid_size={grid_size:}, hydro={hydro:}, aro={aro:}, sas={sas:}, method={method:}, dist={dist:}, cluster={cluster:}")
+    #    f"Running CageCavCalc with grid_size={grid_size:}, hydro={hydro:}, aro={aro:}, sas={sas:}, method={method:}, dist={dist:}, cluster={cluster_text:}")
     cav = CageCavityCalc.cavity()
     cav.dummy_atom_radii = grid_size
     cav.grid_spacing = grid_size
+    
+    cav.clustering_to_remove_cavity_noise = cluster
 
     # this array will be used to hold the coordinates.  It
     # has access to PyMOL objects and, we have access to it.
@@ -167,20 +175,20 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
         dist_90_text = "Auto"
         window_radius = cav.calculate_window()
         cav.distance_threshold_for_90_deg_angle = window_radius*dist_90_a_v
+        if cav.distance_threshold_for_90_deg_angle < 5:
+            cav.distance_threshold_for_90_deg_angle = 5
         print(f"Distance threshold for 90 deg angle = {cav.distance_threshold_for_90_deg_angle:.2f} A")
     if dist_90_m == True:
         dist_90_text = "Manual"
         cav.distance_threshold_for_90_deg_angle = dist_90_m_v
-    if cav.distance_threshold_for_90_deg_angle < 5:
-        cav.distance_threshold_for_90_deg_angle = 5
+    
     dist_90_text = dist_90_text+str(round(cav.distance_threshold_for_90_deg_angle,1))
     volume = cav.calculate_volume()
-    print("Volume of the cavity=", volume, " A^3")
+    print("Volume of the cavity=", round(volume,2), "A^3")
     
     cavity_text = str(round(volume,2))+"A3_"+str(grid_size)+"A_"+str(selection)+"_"+dist_90_text
     index_to_propery = {0: "aromaticity", 1: "solvent_accessibility", 2: "hydrophobicity", 3: "electrostatics"}
     
-
 
     if hydro or aro or sas:
         cav.calculate_hydrophobicity()

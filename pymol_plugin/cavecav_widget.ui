@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>435</width>
-    <height>285</height>
+    <width>441</width>
+    <height>367</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>250</y>
+     <y>330</y>
      <width>411</width>
      <height>23</height>
     </rect>
@@ -26,264 +26,22 @@
     <string>Calculate volume</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="hydro_check">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>70</y>
-     <width>111</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Hydrophobicity</string>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="close_to_center_radio">
-   <property name="geometry">
-    <rect>
-     <x>280</x>
-     <y>130</y>
-     <width>131</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Closest to center</string>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="largest_check">
-   <property name="geometry">
-    <rect>
-     <x>170</x>
-     <y>130</y>
-     <width>100</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Largest</string>
-   </property>
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QSlider" name="grid_slider">
-   <property name="geometry">
-    <rect>
-     <x>100</x>
-     <y>40</y>
-     <width>251</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <number>24</number>
-   </property>
-   <property name="sliderPosition">
-    <number>4</number>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>130</y>
-     <width>161</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Which volume select?</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>40</y>
-     <width>81</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Grid size (Å):</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="grid_edit">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>40</y>
-     <width>41</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>1.0</string>
-   </property>
-   <property name="maxLength">
-    <number>20</number>
-   </property>
-   <property name="cursorPosition">
-    <number>3</number>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_3">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>100</y>
-     <width>51</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Method:</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_4">
-   <property name="geometry">
-    <rect>
-     <x>210</x>
-     <y>100</y>
-     <width>71</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Dist. func.:</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="aro_check">
-   <property name="geometry">
-    <rect>
-     <x>130</x>
-     <y>70</y>
-     <width>131</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Aromatic contacts</string>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="sas_check">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>70</y>
-     <width>71</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>SASA</string>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QComboBox" name="hydro_method">
-   <property name="geometry">
-    <rect>
-     <x>70</x>
-     <y>100</y>
-     <width>131</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <item>
-    <property name="text">
-     <string>Ghose</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>Crippen</string>
-    </property>
-   </item>
-  </widget>
-  <widget class="QComboBox" name="hydro_dist">
-   <property name="geometry">
-    <rect>
-     <x>280</x>
-     <y>100</y>
-     <width>131</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="currentText">
-    <string>Fauchere</string>
-   </property>
-   <item>
-    <property name="text">
-     <string>Fauchere</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>Fauchere2</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>Audry</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>OnlyValues</string>
-    </property>
-   </item>
-  </widget>
   <widget class="QComboBox" name="selection_name">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>27</x>
      <y>10</y>
      <width>401</width>
      <height>23</height>
     </rect>
    </property>
   </widget>
-  <widget class="QCheckBox" name="esp_check">
-   <property name="geometry">
-    <rect>
-     <x>360</x>
-     <y>70</y>
-     <width>51</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>ESP</string>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-  </widget>
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>160</y>
-     <width>321</width>
+     <x>10</x>
+     <y>246</y>
+     <width>301</width>
      <height>81</height>
     </rect>
    </property>
@@ -361,6 +119,303 @@
     </property>
     <property name="value">
      <double>5.000000000000000</double>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_2">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>190</y>
+     <width>341</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Cavity volume selection</string>
+   </property>
+   <widget class="QRadioButton" name="volume_largest_check">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>20</y>
+      <width>100</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Largest</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="volume_close_to_center_check">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>20</y>
+      <width>131</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Closest to center</string>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="volume_all_check">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>51</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>All</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_4">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>80</y>
+     <width>421</width>
+     <height>111</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Cavity properties</string>
+   </property>
+   <widget class="QCheckBox" name="hydro_check">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>111</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Hydrophobicity</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="aro_check">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>20</y>
+      <width>131</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Aromatic contacts</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="sas_check">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>20</y>
+      <width>71</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>SASA</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="esp_check">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>20</y>
+      <width>51</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ESP</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_3">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>391</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Hydrophobicity method</string>
+    </property>
+    <widget class="QComboBox" name="hydro_method">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>20</y>
+       <width>111</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <item>
+      <property name="text">
+       <string>Ghose</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Crippen</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QComboBox" name="hydro_dist">
+     <property name="geometry">
+      <rect>
+       <x>260</x>
+       <y>20</y>
+       <width>121</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="currentText">
+      <string>Fauchere</string>
+     </property>
+     <item>
+      <property name="text">
+       <string>Fauchere</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Fauchere2</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Audry</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>OnlyValues</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>51</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Method:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>20</y>
+       <width>71</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Dist. func.:</string>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_5">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>38</y>
+     <width>411</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string/>
+   </property>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>9</y>
+      <width>81</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Grid size (Å):</string>
+    </property>
+   </widget>
+   <widget class="QSlider" name="grid_slider">
+    <property name="geometry">
+     <rect>
+      <x>95</x>
+      <y>11</y>
+      <width>251</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>24</number>
+    </property>
+    <property name="sliderPosition">
+     <number>4</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="grid_edit">
+    <property name="geometry">
+     <rect>
+      <x>353</x>
+      <y>9</y>
+      <width>41</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>1.0</string>
+    </property>
+    <property name="maxLength">
+     <number>20</number>
+    </property>
+    <property name="cursorPosition">
+     <number>3</number>
     </property>
    </widget>
   </widget>
