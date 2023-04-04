@@ -584,6 +584,8 @@ def get_args():
     parser.add_argument("-gr", default=1.0, help="Grid spacing resolution (Angstroms)")
     parser.add_argument("-info", default=False, action='store_true', help="Print log INFO on the terminal")
     parser.add_argument("-cluster", default="false", help="Remove cavity noise by dbscan clustering (size or dist)")
+    parser.add_argument("-d90a", default=3.0, help="Automatic distance threshold to calculate 90 deg angle as X times window radious")
+    parser.add_argument("-d90m", default=None, help="Manul distance threshold to calculate 90 deg angle in Angstroms")
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -607,9 +609,13 @@ if __name__ == '__main__':
         cav.clustering_to_remove_cavity_noise = args.cluster
     #Read the input file
     cav.read_file(args.f)
-    #Set the distance_threshold_for_90_deg_angle as 3 times the window radius
+    #Set the distance_threshold_for_90_deg_angle as 3 times the window radius by default or read from input line
     window_radius = cav.calculate_window()
-    cav.distance_threshold_for_90_deg_angle = window_radius*3
+
+    cav.distance_threshold_for_90_deg_angle = window_radius*float(args.d90a)
+    if args.d90m:    
+        cav.distance_threshold_for_90_deg_angle = float(args.d90m)
+
     if cav.distance_threshold_for_90_deg_angle < 5:
         cav.distance_threshold_for_90_deg_angle = 5
     logger.info(f"Distance threshold for 90 deg angle = {cav.distance_threshold_for_90_deg_angle:.2f}")
