@@ -585,7 +585,7 @@ def get_args():
     parser.add_argument("-info", default=False, action='store_true', help="Print log INFO on the terminal")
     parser.add_argument("-cluster", default="false", help="Remove cavity noise by dbscan clustering (size or dist)")
     parser.add_argument("-d90a", default=3.0, help="Automatic distance threshold to calculate 90 deg angle as X times window radious")
-    parser.add_argument("-d90m", default=None, help="Manul distance threshold to calculate 90 deg angle in Angstroms")
+    parser.add_argument("-d90m", default=None, help="Manual distance threshold to calculate 90 deg angle in Angstroms")
     return parser.parse_args()
 
 if __name__ == '__main__':
