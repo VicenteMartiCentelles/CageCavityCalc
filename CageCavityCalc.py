@@ -578,6 +578,7 @@ def get_args():
     parser.add_argument("-f", default=None, help="input file (*pdb, *mol2, ...)")
     parser.add_argument("-o", default="cage_cavity.pdb", help="output file (*pdb, *mol2, ...)")
     parser.add_argument("-hydrophobicity", "-hydro", default=False, action='store_true', help="Calculate hydrophobicity")
+    parser.add_argument("-esp", default=False, action='store_true', help="Calculate ESP")
     parser.add_argument("-method", default="Ghose", help="Method to calculate the hydrophobicity: Ghose or Crippen")
     parser.add_argument("-pymol", default=False, action='store_true', help="create pymol script")
     parser.add_argument("-distfun", default="Fauchere", help="Method to calculate the hydrophobicity: Audry, Fauchere, Fauchere2, OnlyValues")
@@ -622,7 +623,13 @@ if __name__ == '__main__':
     volume = cav.calculate_volume()
     print("Cage cavity volume = ", volume, " A3")
 
-    if args.hydrophobicity==True:
+    if args.esp==True:
+        cav.calculate_esp() # this is problematic if there is metal
+        cav.print_to_file(args.o, 'esp')
+        if args.pymol==True:
+            pymol_filename = args.o[:args.o.find('.')]+".pml"
+            cav.print_to_pymol(pymol_filename,'esp')
+    elif args.hydrophobicity==True:
         cav.hydrophMethod = args.method
         cav.distance_function = args.distfun #Audry, Fauchere, Fauchere2, OnlyValues
         average_cavity_hydrophobicity = cav.calculate_hydrophobicity()
