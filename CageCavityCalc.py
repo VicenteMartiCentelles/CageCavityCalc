@@ -546,7 +546,7 @@ class cavity():
         logger.info(f"Hydrophobicity method and distance function = {self.hydrophMethod}, {self.distance_function}")
         logger.info(f"Average cavity hydrophobicity = {average_cavity_hydrophobicity:.2f} A^-3")
         logger.info(f"Total cavity hydrophobicity = {total_cavity_hydrophobicity:.2f}")
-        return average_cavity_hydrophobicity
+        return self.hydrophobicity
 
     def calculate_esp(self, metal_name=None, metal_charge=None, method='eem', max_memory=1e9):
 
@@ -632,11 +632,16 @@ if __name__ == '__main__':
     elif args.hydrophobicity==True:
         cav.hydrophMethod = args.method
         cav.distance_function = args.distfun #Audry, Fauchere, Fauchere2, OnlyValues
-        average_cavity_hydrophobicity = cav.calculate_hydrophobicity()
+        cavity_hydrophobicity_values = cav.calculate_hydrophobicity()
+        average_cavity_hydrophobicity = np.mean(cavity_hydrophobicity_values)
         print(f"Hydrophobicity method and distance function = {cav.hydrophMethod}, {cav.distance_function}")
-        print(f"Average cavity hydrophobicity = {average_cavity_hydrophobicity:.2f} A^-3")
-        print(f"Total cavity hydrophobicity = {average_cavity_hydrophobicity*volume:.2f}")
-
+        print(f"Average cavity hydrophobicity = {average_cavity_hydrophobicity:.5f} A^-3")
+        print(f"Total cavity hydrophobicity = {average_cavity_hydrophobicity*volume:.5f}")
+        mlp_pos = [i for i in cavity_hydrophobicity_values if i > 0]
+        mlp_neg = [i for i in cavity_hydrophobicity_values if i < 0]
+        lipophilic_index = sum(mlp_pos)/(sum(mlp_pos)-sum(mlp_neg))
+        print(f"Lipophilic_index (LI) = {lipophilic_index:.3f}")
+        
         cav.print_to_file(args.o, 'h')
         if args.pymol==True:
             pymol_filename = args.o[:args.o.find('.')]+".pml"

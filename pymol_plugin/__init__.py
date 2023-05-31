@@ -9,6 +9,7 @@ from __future__ import print_function
 #sys.path.insert(0, '/u/fd/chem1540/github/CageCavityCalc/')
 
 #from CageCavityCalc import cavity
+#UI edited with "Qt Designer"
 
 import os
 
@@ -116,10 +117,10 @@ def make_dialog():
 
 
 
-    def change_slider():
-        slider = int(form.grid_slider.value())+1
-        grid_size = slider*0.2
-        form.grid_edit.setText(f"{grid_size:.1f}")
+#    def change_slider():
+#        slider = int(form.grid_slider.value())+1
+#        grid_size = slider*0.2
+#        form.grid_edit.setText(f"{grid_size:.1f}")
 
     def change_edit():
         slider = int(float(form.grid_edit.text())/0.2)-1
@@ -133,8 +134,8 @@ def make_dialog():
     form.calculate_volume.clicked.connect(run)
     #form.button_browse.clicked.connect(browse_filename)
     #form.button_close.clicked.connect(dialog.close)
-    form.grid_slider.valueChanged.connect(change_slider)
-    form.grid_edit.editingFinished.connect(change_edit)
+    #form.grid_slider.valueChanged.connect(change_slider)
+    #form.grid_edit.editingFinished.connect(change_edit)
 
     return dialog
 
@@ -191,7 +192,14 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
     
 
     if hydro or aro or sas:
-        cav.calculate_hydrophobicity()
+        cavity_hydrophobicity_values = cav.calculate_hydrophobicity()
+        average_cavity_hydrophobicity = sum(cavity_hydrophobicity_values)/len(cavity_hydrophobicity_values)
+        print(f"Average cavity hydrophobicity = {average_cavity_hydrophobicity:.5f} A^-3")
+        print(f"Total cavity hydrophobicity = {average_cavity_hydrophobicity*volume:.5f}")
+        mlp_pos = [i for i in cavity_hydrophobicity_values if i > 0]
+        mlp_neg = [i for i in cavity_hydrophobicity_values if i < 0]
+        lipophilic_index = sum(mlp_pos)/(sum(mlp_pos)-sum(mlp_neg))
+        print(f"Lipophilic_index (LI) = {lipophilic_index:.3f}")
     if esp:
         cav.calculate_esp() # this is problematic if there is metal
 

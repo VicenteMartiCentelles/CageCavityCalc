@@ -380,42 +380,26 @@
      <string>Grid size (Å):</string>
     </property>
    </widget>
-   <widget class="QSlider" name="grid_slider">
+   <widget class="QDoubleSpinBox" name="grid_edit">
     <property name="geometry">
      <rect>
-      <x>95</x>
-      <y>11</y>
-      <width>251</width>
-      <height>20</height>
+      <x>100</x>
+      <y>10</y>
+      <width>62</width>
+      <height>22</height>
      </rect>
     </property>
-    <property name="maximum">
-     <number>24</number>
+    <property name="decimals">
+     <number>1</number>
     </property>
-    <property name="sliderPosition">
-     <number>4</number>
+    <property name="minimum">
+     <double>0.100000000000000</double>
     </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
+    <property name="singleStep">
+     <double>0.100000000000000</double>
     </property>
-   </widget>
-   <widget class="QLineEdit" name="grid_edit">
-    <property name="geometry">
-     <rect>
-      <x>353</x>
-      <y>9</y>
-      <width>41</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>1.0</string>
-    </property>
-    <property name="maxLength">
-     <number>20</number>
-    </property>
-    <property name="cursorPosition">
-     <number>3</number>
+    <property name="value">
+     <double>1.000000000000000</double>
     </property>
    </widget>
   </widget>
