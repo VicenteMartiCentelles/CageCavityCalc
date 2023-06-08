@@ -551,7 +551,7 @@ class cavity():
     def calculate_esp(self, metal_name=None, metal_charge=None, method='eem', max_memory=1e9):
 
 
-        partial_charges = calculate_partial_charges(self.positions, self.atom_names, metal_name=metal_name, metal_charge=metal_charge)
+        partial_charges = calculate_partial_charges(self.positions, self.atom_names, method=method, metal_name=metal_name, metal_charge=metal_charge)
 
         if len(self.dummy_atoms_positions) * len(self.positions) * 8 < max_memory:
             dist_matrix = distance_matrix(self.dummy_atoms_positions, self.positions)

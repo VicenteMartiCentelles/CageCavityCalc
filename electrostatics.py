@@ -48,15 +48,15 @@ def calculate_partial_charges_using_ob(positions, atom_names, method='eem'):
         return None
 
 
-def calculate_partial_charges(positions, atom_names, metal_name=None, metal_charge=None):
+def calculate_partial_charges(positions, atom_names, method, metal_name=None, metal_charge=None):
     if metal_name is not None:
         list_of_metals = [a for a, atom_name in enumerate(atom_names) if atom_name.title() == metal_name.title()]
         positions = np.delete(positions, list_of_metals, axis=0)
         atom_names = np.delete(atom_names, list_of_metals)
-        partial_charges = list(calculate_partial_charges_using_ob(positions, atom_names))
+        partial_charges = list(calculate_partial_charges_using_ob(positions, atom_names, method))
         for index in list_of_metals:
             partial_charges.insert(index, metal_charge)
     else:
-        partial_charges = list(calculate_partial_charges_using_ob(positions, atom_names))
+        partial_charges = list(calculate_partial_charges_using_ob(positions, atom_names, method))
     return partial_charges
 
