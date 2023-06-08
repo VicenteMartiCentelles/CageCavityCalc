@@ -93,6 +93,8 @@ def make_dialog():
         esp = form.esp_check.isChecked()
         method = form.hydro_method.currentText()
         dist = form.hydro_dist.currentText()
+        metal_name = form.metal_name_text.text()
+        metal_charge = int(form.metal_charge_text.text())
 
         if form.volume_largest_check.isChecked() == True:
             cluster_text = "size"
@@ -108,11 +110,11 @@ def make_dialog():
 
         #form.calculate_volume.setText("Calculating... it might take a while (~1 min)")
         
-        print(f"Running CageCavCalc with selection={selection}, grid_size={grid_size:}, hydro={hydro:}, aro={aro:}, sas={sas:},esp={esp:}, method={method:}, dist={dist:}, cluster={cluster_text:}")
+        print(f"Running CageCavCalc with selection={selection}, grid_size={grid_size:}, hydro={hydro:}, aro={aro:}, sas={sas:},esp={esp:}, method={method:}, dist={dist:}, cluster={cluster_text:}, metal_name={metal_name:}, metal_charge={metal_charge:}")
 
         #dialog.close()
 
-        show_cavity_in_pymol(selection, grid_size, hydro, aro, sas, esp, method, dist, cluster_text, dist_90_a, dist_90_a_v, dist_90_m, dist_90_m_v)
+        show_cavity_in_pymol(selection, grid_size, hydro, aro, sas, esp, method, dist, cluster_text, dist_90_a, dist_90_a_v, dist_90_m, dist_90_m_v, metal_name, metal_charge)
 
 
 
@@ -122,13 +124,13 @@ def make_dialog():
 #        grid_size = slider*0.2
 #        form.grid_edit.setText(f"{grid_size:.1f}")
 
-    def change_edit():
-        slider = int(float(form.grid_edit.text())/0.2)-1
-        if slider <0:
-           slider=0
-        elif slider>24:
-           slider=24
-        form.grid_slider.setValue(slider)
+#    def change_edit():
+#        slider = int(float(form.grid_edit.text())/0.2)-1
+#        if slider <0:
+#           slider=0
+#        elif slider>24:
+#           slider=24
+#        form.grid_slider.setValue(slider)
 
     # hook up button callbacks
     form.calculate_volume.clicked.connect(run)
@@ -140,7 +142,7 @@ def make_dialog():
     return dialog
 
 
-def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=False, esp=False, method='Ghose', dist="Fauchere", cluster="false", dist_90_a=True, dist_90_a_v=2.0, dist_90_m=False, dist_90_m_v=5.0):
+def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=False, esp=False, method='Ghose', dist="Fauchere", cluster="false", dist_90_a=True, dist_90_a_v=2.0, dist_90_m=False, dist_90_m_v=5.0, metal_name="Pd", metal_charge=2):
     import CageCavityCalc
     from pymol import cmd
     from pymol import stored
@@ -201,7 +203,7 @@ def show_cavity_in_pymol(selection, grid_size=1, hydro=True, aro=False, sas=Fals
         lipophilic_index = sum(mlp_pos)/(sum(mlp_pos)-sum(mlp_neg))
         print(f"Lipophilic_index (LI) = {lipophilic_index:.3f}")
     if esp:
-        cav.calculate_esp() # this is problematic if there is metal
+        cav.calculate_esp(metal_name=metal_name, metal_charge=metal_charge) # charges of metals nee to be introduced by the user
 
     for idx, condition in enumerate([aro, sas, hydro, esp]):
         if condition:
