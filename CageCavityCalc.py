@@ -549,18 +549,18 @@ class cavity():
         return self.hydrophobicity
 
     def calculate_esp(self, metal_name=None, metal_charge=None, method='eem', max_memory=1e9):
-
+        factor = (8.987551792e10)*(1.602176634e-19)*(1e10) #(Coulomb constant)*(elementary charge)/ Angstrom
 
         partial_charges = calculate_partial_charges(self.positions, self.atom_names, method=method, metal_name=metal_name, metal_charge=metal_charge)
 
         if len(self.dummy_atoms_positions) * len(self.positions) * 8 < max_memory:
             dist_matrix = distance_matrix(self.dummy_atoms_positions, self.positions)
-            grid_charges = (1 / dist_matrix).dot(partial_charges)
+            grid_charges = (factor / dist_matrix).dot(partial_charges)
         else:
             grid_charges = np.zeros(len(self.dummy_atoms_positions))
             for idx, dummy_atom in enumerate(self.dummy_atoms_positions):
                 dist_matrix = distance_matrix([dummy_atom], self.positions)[0]
-                grid_charges[idx] = np.sum(partial_charges * (1 / dist_matrix))
+                grid_charges[idx] = np.sum(partial_charges * (factor / dist_matrix))
 
         self.esp_grid = grid_charges
 
