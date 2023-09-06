@@ -1,7 +1,15 @@
 # CageCavityCalc
 Automated calculation of cavity in molecular cages
 
-![Alt text](pic/principle.png "Principle")
+![Alt text](CageCavityCalc/pic/principle.png "Principle")
+
+
+
+## Installation:
+```
+conda install rdkit --channel conda-forge
+pip install CageCavityCalc
+```
 
 ### Quick start
 
@@ -16,14 +24,14 @@ The cavity can be saved into pdb file (and also create pymol *.pml to facilitate
 cavity_calc.print_to_file("cage_cavity.pdb")
 cavity_calc.print_to_pymol("cage_cavity.pml")
 ```
-![Alt text](pic/cavity.png "Principle")
+![Alt text](CageCavityCalc/pic/cavity.png "Principle")
 
 You can also calculate hydrophobicity index and visualise it on the cavity:
 ```
 cavity_calc.calculate_hydrophobicity()
 cavity_calc.print_to_pymol("cage_cavity_hydrophobicity.pml")
 ```
-![Alt text](pic/hydrophobicity.png "Principle")
+![Alt text](CageCavityCalc/pic/hydrophobicity.png "Principle")
 
 
 From bash:
