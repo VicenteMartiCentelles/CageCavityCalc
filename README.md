@@ -36,7 +36,7 @@ cavity_calc.print_to_pymol("cage_cavity_hydrophobicity.pml")
 
 From bash:
 ```
-python ../../main.py -f cage.pdb -o cage_cavity.pdb
+python -m CageCavityCalc -f cage.pdb -o cage_cavity.pdb
 ```
 
 ### Additional support
