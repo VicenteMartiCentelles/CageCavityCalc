@@ -71,8 +71,8 @@ def main():
         print(f"Total cavity hydrophobicity = {average_cavity_hydrophobicity * volume:.5f}")
         mlp_pos = [i for i in cavity_hydrophobicity_values if i > 0]
         mlp_neg = [i for i in cavity_hydrophobicity_values if i < 0]
-        lipophilic_index = sum(mlp_pos) / (sum(mlp_pos) - sum(mlp_neg))
-        print(f"Lipophilic_index (LI) = {lipophilic_index:.3f}")
+        hydrophobic_index = sum(mlp_pos) / (sum(mlp_pos) - sum(mlp_neg))
+        print(f"Hydrophobic_index (HI) = {hydrophobic_index:.3f}")
 
         cav.print_to_file(args.o, 'h')
         if args.pymol == True:
