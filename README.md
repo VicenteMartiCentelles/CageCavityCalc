@@ -10,6 +10,8 @@ Automated calculation of cavity in molecular cages
 conda install rdkit --channel conda-forge
 pip install CageCavityCalc
 ```
+Note: If it rasies an error "ValueError: k must be an integer or a sequence of integers", we found that it is due to an incompatibility with the most recent version of SciPy, therefore installing version SciPy 1.7.3 it should solve the problem
+
 
 ### Quick start
 
