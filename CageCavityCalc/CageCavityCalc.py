@@ -547,7 +547,7 @@ class cavity():
         return self.hydrophobicity
 
     def calculate_esp(self, metal_name=None, metal_charge=None, method='eem', max_memory=1e9):
-        factor = (8.987551792e10)*(1.602176634e-19)*(1e10) #(Coulomb constant)*(elementary charge)/ Angstrom
+        factor = (8.987551787e9)*(1.602176634e-19)*(1e10) #(Coulomb constant)*(elementary charge)/ Angstrom
 
         partial_charges = calculate_partial_charges(self.positions, self.atom_names, method=method, metal_name=metal_name, metal_charge=metal_charge)
 
