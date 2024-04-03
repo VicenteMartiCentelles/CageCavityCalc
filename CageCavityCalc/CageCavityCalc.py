@@ -566,4 +566,3 @@ class cavity():
 
         self.window_radius = get_max_escape_sphere(self.positions, self.atom_names)
         return self.window_radius
-
