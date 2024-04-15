@@ -35,8 +35,15 @@ def calculate_partial_charges_using_ob(positions, atom_names, method='eem'):
     ob_conversion = openbabel.OBConversion()
     ob_conversion.SetInAndOutFormats("pdb", "mol2")
 
+    # We firstly change pdb -> mol2, because charges are not assigned correctly when used with pdb
     mol = openbabel.OBMol()
     ob_conversion.ReadFile(mol, tmpdir_path + "/temp.pdb")
+    ob_conversion.WriteFile(mol, tmpdir_path + "/temp.mol2")
+    ob_conversion.SetInAndOutFormats("mol2", "mol2")
+
+    mol = openbabel.OBMol()
+    ob_conversion.ReadFile(mol, tmpdir_path + "/temp.mol2")
+
 
     ob_charge_model = openbabel.OBChargeModel.FindType(method)
 
@@ -58,5 +65,6 @@ def calculate_partial_charges(positions, atom_names, method, metal_name=None, me
             partial_charges.insert(index, metal_charge)
     else:
         partial_charges = list(calculate_partial_charges_using_ob(positions, atom_names, method))
+    #print("Sum", np.sum(partial_charges))
     return partial_charges
 
