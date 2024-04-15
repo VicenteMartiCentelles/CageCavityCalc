@@ -145,7 +145,11 @@ class cavity():
 
         #We use the center of mass of the molecule as the pore center of mass
         kdtxyzAtoms = KDTree(self.positions, leafsize = 20) #Calculate the KDTree of the cage atom positions
-        distancesFromCOM = kdtxyzAtoms.query(pore_center_of_mass, k = None, p = 2)
+        distancesFromCOM = kdtxyzAtoms.query(pore_center_of_mass, k = self.n_atoms, p = 2)
+        #print("++++++++++++++++++++++++++++++++++++++++++")
+        #print("distancesFromCOM: ")
+        #print(distancesFromCOM)
+        #print(len(distancesFromCOM))
         maxDistanceFromCOM = (distancesFromCOM[0][-1])
         pore_radius = distancesFromCOM[0][0]*self.distanceFromCOMFactor
         '''
@@ -229,15 +233,29 @@ class cavity():
                 summAngles = []
                 distancesAngles = []
                 for atom_type in self.atom_type_list:
-                    xyzAtomsSet2 = self.KDTree_dict[atom_type].query(i.pos, k = None, p = 2,
+                    xyzAtomsSet2 = self.KDTree_dict[atom_type].query(i.pos, k = self.n_atoms, p = 2,
                                                                 distance_upper_bound = self.distance_threshold_for_90_deg_angle)
-                    if xyzAtomsSet2[1]:
+
+
+
+
+                    #print("xyzAtomsSet2[0]:",xyzAtomsSet2[0])
+                    for index_atom_iter in range(0, len(xyzAtomsSet2[0])):
+                        if xyzAtomsSet2[0][index_atom_iter] == math.inf:
+                            index_inf = index_atom_iter
+                            xyzAtomsSet3_dist = xyzAtomsSet2[0][:index_inf]
+                            xyzAtomsSet3_index = xyzAtomsSet2[1][:index_inf]
+                            break
+
+                    #print("xyzAtomsSet3_dist:",xyzAtomsSet3_dist)
+                    if len(xyzAtomsSet3_dist) > 0:
+                        #print("if xyzAtomsSet2[1]:",xyzAtomsSet2[0])
                         vdwR = vdwR_dict[atom_type][0]
                         distThreshold = vdwR + vdwRdummy
-                        if xyzAtomsSet2[0][0] < distThreshold:
+                        if xyzAtomsSet3_dist[0] < distThreshold:
                             i.overlapping_with_cage = 1
 
-                        for atom_pos_index in xyzAtomsSet2[1]:
+                        for atom_pos_index in xyzAtomsSet3_index:
                             atom_pos = coords_dict[atom_type][atom_pos_index]
                             dist2 = np.linalg.norm(np.array(atom_pos)-np.array(i.pos))
                             vect2Norm = (np.array(atom_pos)-np.array(i.pos)) / dist2
@@ -262,8 +280,8 @@ class cavity():
         # Calculate the number of neighbors for each dummy atom. From 1 to 7 (as 1 contact is always, the atom itself)
         for i, dummy_atom in enumerate(calculatedGird.grid):
             if dummy_atom.inside_cavity == 1:
-                xyzDummySet = calculatedGirdContactsKDTree.query(dummy_atom.pos, k=None, p=2, distance_upper_bound=1.1*self.grid_spacing)
-                dummy_atom.number_of_neighbors = len(xyzDummySet[1])
+                xyzDummySet = calculatedGirdContactsKDTree.query_ball_point(dummy_atom.pos, r=1.1*self.grid_spacing, p=2)
+                dummy_atom.number_of_neighbors = len(xyzDummySet)
         
         if self.clustering_to_remove_cavity_noise != "false":
             cavity_dummy_atoms_positions = []
@@ -496,7 +514,7 @@ class cavity():
 
             for atom_type in self.atom_type_list:
 
-                dist = self.KDTree_dict[atom_type].query(dummy_atom, k=None, p=2,
+                dist = self.KDTree_dict[atom_type].query(dummy_atom, k=self.n_atoms, p=2,
                                                     distance_upper_bound=self.distThreshold_atom_contacts)
                 '''
                 if (printLevel == 2):
@@ -506,26 +524,32 @@ class cavity():
                     fileExtraData.write("Global Index: " + str([atomTypes_HydrophValues_dict[atom_type].get(key + 1) for key in
                                                                 dist[1]]) + "\n")  # Add 1 to key as atom number starts with 1 and list number with 0
                 '''
+                for index_atom_iter in range(0, len(dist[0])):
+                    if dist[0][index_atom_iter] == math.inf:
+                        index_inf = index_atom_iter
+                        dist_dist = dist[0][:index_inf]
+                        dist_index = dist[1][:index_inf]
+                        break
 
-                if dist[0]:
-                    for k in range(0, len(dist[0])):
+                if len(dist_dist) > 0:
+                    for k in range(0, len(dist_dist)):
 
                         # calculate hydrophobicity
-                        Hydroph_Value = atomTypesMeanListHydrophValues[atomTypes_HydrophValues_dict[atom_type][1 + dist[1][
+                        Hydroph_Value = atomTypesMeanListHydrophValues[atomTypes_HydrophValues_dict[atom_type][1 + dist_index[
                             k]] - 1]  # we need to add +1 to the k index as atom numbering is starts at 1 and lists index at 0. After taht, we need to add -1 to the atom index from the dict to obtain the value from the list that starts from 0
 
-                        hydro = calc_single_hydrophobicity(dist[0][k], Hydroph_Value, self.distance_function)
+                        hydro = calc_single_hydrophobicity(dist_dist[k], Hydroph_Value, self.distance_function)
                         dummy_hydrophobicity.append(hydro)
 
                         #calculate aromatic contact
-                        isAromatic = rdkit_cage.GetAtomWithIdx(self.atom_idx_dict[atom_type][dist[1][k]]).GetIsAromatic()
+                        isAromatic = rdkit_cage.GetAtomWithIdx(self.atom_idx_dict[atom_type][dist_index[k]]).GetIsAromatic()
                         if isAromatic == True:
-                            dummy_aromatic_contacts.append(1 / (1 + dist[0][k]))
+                            dummy_aromatic_contacts.append(1 / (1 + dist_dist[k]))
                         else:
                             dummy_aromatic_contacts.append(0)
 
                         #calculate solvent accessibility
-                        dummy_solvent_accessibility.append(1/dist[0][k])
+                        dummy_solvent_accessibility.append(1/dist_dist[k])
 
             self.hydrophobicity.append(np.sum(dummy_hydrophobicity))
             self.aromatic_constacts.append(np.sum(dummy_aromatic_contacts))
@@ -566,3 +590,4 @@ class cavity():
 
         self.window_radius = get_max_escape_sphere(self.positions, self.atom_names)
         return self.window_radius
+
