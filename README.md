@@ -6,7 +6,6 @@ Automated calculation of cavity in molecular cages
 
 
 ## Installation:
-```
 
 The installation of C3 requires the following steps. The software is compatible with Linux, Windows, and Mac.
 
@@ -25,6 +24,7 @@ Download and install Miniconda3 (https://docs.conda.io/en/latest/miniconda.html)
 
 Open the “Anaconda Prompt” and execute the following commands:
 
+```
 pip install CageCavityCalc
 conda install -c conda-forge pymol-open-source
 pip uninstall pyqt5
@@ -34,7 +34,6 @@ conda install -c conda-forge mdanalysis
 pymol
 
 Then, install the PyMol the plugin: Plugin > Plugin Manager > Install New Plugin. Choose “Install from local file” and locate the __init__.py file in the pymol_plugin folder of C3 typically located in C:\Users\UserName\miniconda3\Lib\site-packages\CageCavityCalc\pymol_plugin.
-
 ```
 
 ### Quick start
