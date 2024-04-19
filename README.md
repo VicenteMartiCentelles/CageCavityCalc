@@ -33,7 +33,9 @@ conda install -c conda-forge openbabel
 conda install -c conda-forge mdanalysis
 pymol
 
-Then, install the PyMol the plugin: Plugin > Plugin Manager > Install New Plugin. Choose “Install from local file” and locate the __init__.py file in the pymol_plugin folder of C3 typically located in C:\Users\UserName\miniconda3\Lib\site-packages\CageCavityCalc\pymol_plugin.
+Then, install the PyMol the plugin: Plugin > Plugin Manager > Install New Plugin.
+Choose “Install from local file” and locate the __init__.py file in the pymol_plugin folder of C3
+(typically located in C:\Users\UserName\miniconda3\Lib\site-packages\CageCavityCalc\pymol_plugin).
 ```
 
 ### Quick start
@@ -45,12 +47,12 @@ The module can be used from the command line or from a python file by loading th
 -f	Input file (*pdb, *mol2, ...)
 -o	Output file (*pdb, *mol2, ...)
 -gr X	Grid spacing resolution (Angstroms). Default 1.0
--d90a X	Automatic distance threshold to calculate 90 deg angle as X times window radius. Default 3.0
+-d90a X	Automatic distance threshold to calculate 90 deg angle as X times window radius. Default 2.0
 -d90m X	Manual distance threshold to calculate 90 deg angle in Å
 -cluster false, size or dist	Remove cavity noise by dbscan clustering (size or dist)
 -hydrophobicity or -hydro	Calculate hydrophobicity
--method Ghose or Crippen	Method to calculate the hydrophobicity: Ghose or Crippen
--distfun Audry, Fauchere, Fauchere2, or OnlyValues	Method to calculate the hydrophobicity: Audry, Fauchere, Fauchere2, OnlyValues
+-method Ghose or Crippen	Method to calculate the hydrophobicity
+-distfun Audry, Fauchere, Fauchere2, or OnlyValues:	Method to calculate the hydrophobicity
 -esp	Calculate the electrostatic potential
 -pymol	Create PyMol pml file
 -info	Print log INFO on the terminal
@@ -94,7 +96,7 @@ Example of cavity visulaization with hydrophobicity in PyMol using teh saved *.p
 
 The C3 Python module is integrated into PyMol in a plugin. The plugin is integrated into the software through a user interface allowing the selection of the different parameters for the cavity calculation. First, the user needs to initiate PyMol by typing “pymol” in the Anaconda Prompt. Then, in the PyMol interface the user needs to load the desired cage file using File > Open and select the “cage.pdb” file. Then, to initiate the C3 plugin, the user needs access to Plugin > CageCavityCalc. Once all the options are selected, the user needs to click on “Calculate volume” to initiate the calculation of the cavity and all the selected properties. Once the computation is finished, the computed cavity and the cavity with the properties are displayed in PyMol. The PyMol plugin enables the storage of all computed properties in the same PyMol session file, allowing the user to select which one to display and to save PDB files of each property. To save the session file, the user needs to access to File > Save Session As. The user can select the computed property to display by just clicking on the right panel of the generated cavity objects (see Figure 9 in the manuscript). To obtain a good quality image of the cage and the cavity, the user needs to type “ray” in the PyMol command line, then the obtained image can be saved by using File > Export Image As > PNG. 
 
-
+![Alt text](CageCavityCalc/pic/C3_PyMol_Plugin.png "C3_PyMol_Plugin")
 
 ### Additional support
 
