@@ -186,3 +186,11 @@ To make the calculation loud use CAV_LOG_LEVEL environmental variable
 ```commandline
 export CAV_LOG_LEVEL=INFO
 ```
+
+### Citation
+If you find CageCavityCalc useful in your research please consider citing the paper:
+
+Vicente Martí-Centelles Author ,Tomasz Krzysztof Piskorz ,Fernanda Duarte. CageCavityCalc (C3): A computational tool for calculating and visualizing cavities in Molecular Cages. ChemRxiv, 2024, https://doi.org/10.26434/chemrxiv-2024-fmlx0
+
+
+
