@@ -100,26 +100,29 @@ The C3 Python module is integrated into PyMol in a plugin. The plugin is integra
 
 ### Additional support
 
-Reading cage class from cgbind:
+The Python module can be integrated into more complex programs, for example, it can be used to read a cage class from cgbind:
+
 ```
+from CageCavityCalc.CageCavityCalc import cavity
 from cgbind import Linker, Cage
+
 linker = Linker(smiles='C1(C#CC2=CC=CC(C#CC3=CC=CN=C3)=C2)=CC=CN=C1', arch_name='m2l4')
 cage = Cage(linker, metal='Pd')
 
-from main import cavity
 cav = cavity()
 cav.read_cgbind(cage)
 cav.calculate_volume()
 cav.print_to_file("cage_cavity.pdb")
 ```
 
-Reading MDAnalysis universe:
+It can also be used for reading MDAnalysis universe files:
  
-```commandline
-from main import cavity
+```
+from CageCavityCalc.CageCavityCalc import cavity
+import MDAnalysis
+
 cav = cavity()
 
-import MDAnalysis
 syst = MDAnalysis.Universe("short.gro", "short.xtc")
 
 volume = []
