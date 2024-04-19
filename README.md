@@ -1,5 +1,5 @@
 # CageCavityCalc
-Automated calculation of cavity in molecular cages
+CageCavityCalc is a Python-based tool for calculating the cavity size of molecular cages. 
 
 ![Alt text](CageCavityCalc/pic/principle.png "Principle")
 
@@ -187,7 +187,7 @@ To make the calculation loud use CAV_LOG_LEVEL environmental variable
 export CAV_LOG_LEVEL=INFO
 ```
 
-### Citation
+# Citation
 If you find CageCavityCalc useful in your research please consider citing the paper:
 
 Vicente Martí-Centelles Author ,Tomasz Krzysztof Piskorz ,Fernanda Duarte. CageCavityCalc (C3): A computational tool for calculating and visualizing cavities in Molecular Cages. ChemRxiv, 2024, https://doi.org/10.26434/chemrxiv-2024-fmlx0
