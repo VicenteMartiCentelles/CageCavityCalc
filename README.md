@@ -45,22 +45,27 @@ The module can be used from the command line or from a python file by loading th
 ```
  Arguments that can be used int the C3 Python module though the command line.
 -f	Input file (*pdb, *mol2, ...)
--o	Output file (*pdb, *mol2, ...)
+-o	Output file (*pdb, *mol2, ...). If this argument is not used, the automatic generation of output filenames is performed
 -gr X	Grid spacing resolution (Angstroms). Default 1.0
--d90a X	Automatic distance threshold to calculate 90 deg angle as X times window radius. Default 2.0
+-d90a X	Automatic distance threshold to calculate 90 deg angle as X times window radius. Default 2.0. If the calculated threshold distance is smaller than 5 Å, it is set to 5 Å to ensure probe to find atoms to calculate the angle.
 -d90m X	Manual distance threshold to calculate 90 deg angle in Å
 -cluster false, size or dist	Remove cavity noise by dbscan clustering (size or dist)
 -hydrophobicity or -hydro	Calculate hydrophobicity
 -method Ghose or Crippen	Method to calculate the hydrophobicity
 -distfun Audry, Fauchere, Fauchere2, or OnlyValues:	Method to calculate the hydrophobicity
 -esp	Calculate the electrostatic potential
+-charge_method	Charge method used in the ESP: eem, mmff94, gasteiger, qeq, qtpie, eem2015ha, eem2015hm, eem2015hn, eem2015ba, eem2015bm, eem2015bn. Default=eem.
+-metal	Metal used in the ESP
+-metal_charge	Charge of the metal used in the ESP
 -pymol	Create PyMol pml file
 -info	Print log INFO on the terminal
 ```
 
-To use C3 as in a Python script, it is required to load the module and perform. Then, the user needs to specify the name of the file to be loaded, in the example below it is loaded the cage.pdb file, then the cavity is computed using a grid spacing of 1.0 Å and a distance threshold for the 90-degree calculation of 2.0 times the window size. Note that this code uses the same implementation of the distance threshold for the 90-degree of the PyMol plugin, if this is smaller than 5 Å it is set to 5 Å to ensure a correct calculation. The cavity is be saved into .pdb file and also a PyMol *.pml file to facilitate cavity visualization in PyMol. The calculated properties can also be saved, the example below shows how toa calculate the hydrophobicity and save a .pdb file with the hydrophobicity values stored in the B-factor of the .pdb file and as PyMol *.pml file to facilitate cavity visualization with the hydrophobicity in PyMol.
+To use C3 as in a Python script, it is required to load the module and perform. Then, the user needs to specify the name of the file to be loaded, in the example below it is loaded the cage.pdb file, then the cavity is computed using a grid spacing of 1.0 Å and a distance threshold for the 90-degree calculation of 2.0 times the window size. Note that this code uses the same implementation of the distance threshold for the 90-degree of the PyMol plugin. If computed window size is very small, resulting in threshold for the 90-degree smaller than 5 Å, the threshold is set to 5 Å to ensure the probe to find atoms to calculate the angle. The cavity is be saved into .pdb file and also a PyMol *.pml file to facilitate cavity visualization in PyMol. The calculated properties can also be saved, the example below shows how to calculate the hydrophobicity and ESP and save a .pdb file with the hydrophobicity and ESP values stored in the B-factor of two .pdb and PyMol *.pml files to facilitate cavity visualization with the properties in PyMol.
 
 ```
+from CageCavityCalc.CageCavityCalc import cavity
+
 cage_name = "cage"
 grid_spacing = 1.0
 distance_threshold_for_90_deg_angle = 2.0
@@ -76,9 +81,14 @@ cav.dummy_atom_radii = float(grid_spacing)
 volume = cav.calculate_volume()
 cav.print_to_file("cage_cavity.pdb")
 cav.print_to_pymol("cage_cavity.pml")
+cav.hydrophMethod = "Ghose" #Ghose or Crippen
+cav.distance_function = "Fauchere" # Audry, Fauchere, Fauchere2, OnlyValues
 cav.calculate_hydrophobicity()
 cav.print_to_file("cage_cavity_hydrophobicity.pdb")
 cav.print_to_pymol("cage_cavity_hydrophobicity.pml", 'h')
+cav.calculate_esp() #If metals: cav.calculate_esp(metal_name="Pd", metal_charge=2)
+cav.print_to_file("cage_cavity_esp.pdb")
+cav.print_to_pymol("cage_cavity_esp.pml", "esp")
 
 print("Cavity_volume= ", volume, " A3")
 ```
