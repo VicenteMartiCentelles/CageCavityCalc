@@ -40,9 +40,9 @@ CageCavityCalc can be used from the PyMol plugin, throught the command line, fro
 
 ### Command line
 For example, to use C3 from the command line the user needs to executee in the console the following commands: $python CageCavityCalc.py -f cage.pdb -o cage_cavity.pdb -gr 1.5. This order will load the cage.pdb file containing the cage chemical structure and the cavity of the cage will be calculated using a grid spacing of 1.5 Å. Additional arguments can be used as described in Table S1, allowing specifying the distance threshold used to calculate 90º angle, the use of the clustering algorithm to remove noisy cavity points that does not belogin to the main cavity, calculation of hydrophobicity specifying the method and distance function, calculation of hydrophobicity, save a PyMol pml file, or print additional information of the calculations in the terminal.
-```
- Arguments that can be used int the C3 Python module though the command line.
--f	Input file (*pdb, *mol2, ...)
+
+> Arguments that can be used int the C3 Python module though the command line.
+> -f	Input file (*pdb, *mol2, ...)
 -o	Output file (*pdb, *mol2, ...). If this argument is not used, the automatic generation of output filenames is performed.
 -gr X	Grid spacing resolution (Angstroms). Default 1.0
 -d90a X	Automatic distance threshold to calculate 90 deg angle as X times window radius. Default 2.0. If the calculated threshold distance is smaller than 5 Å, it is set to 5 Å to ensure probe to find atoms to calculate the angle.
@@ -57,7 +57,7 @@ For example, to use C3 from the command line the user needs to executee in the c
 -metal_charge	Charge of the metal used in the ESP
 -pymol	Create PyMol pml file
 -info	Print log INFO on the terminal
-```
+
 
 ### Python module
 To use C3 as in a Python script, it is required to load the module, followed by the initialization of the cavity, load the .pdb file of the cage, followed by the cavity volume calculation (using the default values of grid spacing resolution 1 Å and distance threshold for the 90-degree calculation of 5 Å) and saving the corresponding *.pdb file and PyMol *.pml file for cavity visualization in PyMol.
