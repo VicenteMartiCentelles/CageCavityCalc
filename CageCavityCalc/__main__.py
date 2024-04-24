@@ -46,15 +46,16 @@ def main():
         cav.clustering_to_remove_cavity_noise = args.cluster
     # Read the input file
     cav.read_file(args.f)
-    # Set the distance_threshold_for_90_deg_angle as 3 times the window radius by default or read from input line
+    
     window_radius = cav.calculate_window()
 
     cav.distance_threshold_for_90_deg_angle = window_radius * float(args.d90a)
+    if cav.distance_threshold_for_90_deg_angle < 5:
+        cav.distance_threshold_for_90_deg_angle = 5
+
     if args.d90m:
         cav.distance_threshold_for_90_deg_angle = float(args.d90m)
 
-    if cav.distance_threshold_for_90_deg_angle < 5:
-        cav.distance_threshold_for_90_deg_angle = 5
     print(f"Distance threshold for 90 deg angle = {cav.distance_threshold_for_90_deg_angle:.2f}")
     volume = cav.calculate_volume()
     
