@@ -73,10 +73,11 @@ print("Cavity_volume= ", volume, " A3")
 ```
 
 
-## Python module examples additional examples
+## Python module  additional examples
+CageCavityCalc, as a Python module, integrates well with more complex programs. We provide several examples showcasing its core functionalities and the types of analyses achievable.
 
 ### Example 1
-The CageCavityCalc Python module can be integrated into more complex programs. Here we provide a more complex example to show additional functionality of C3. In the example below it is loaded the cage.pdb file, then the cavity is computed using a grid spacing of 1.0 Å and a distance threshold for the 90-degree calculation of 2.0 times the window size. Note that this code uses the same implementation of the distance threshold for the 90-degree of the PyMol plugin. If computed window size is very small, resulting in threshold for the 90-degree smaller than 5 Å, the threshold is set to 5 Å to ensure the probe to find atoms to calculate the angle. The cavity is be saved into *.pdb file and also a PyMol *.pml file to facilitate cavity visualization in PyMol. The calculated properties can also be saved, the example below shows how to calculate the hydrophobicity and ESP and save individual *.pdb files with the hydrophobicity and ESP values stored in the B-factor, as well as PyMol *.pml files to facilitate cavity visualization with the properties in PyMol.
+Here we provide a more complex example to show additional functionality of C3. In the example below it is loaded the cage.pdb file, then the cavity is computed using a grid spacing of 1.0 Å and a distance threshold for the 90-degree calculation of 2.0 times the window size. Note that this code uses the same implementation of the distance threshold for the 90-degree of the PyMol plugin. If computed window size is very small, resulting in threshold for the 90-degree smaller than 5 Å, the threshold is set to 5 Å to ensure the probe to find atoms to calculate the angle. The cavity is be saved into *.pdb file and also a PyMol *.pml file to facilitate cavity visualization in PyMol. The calculated properties can also be saved, the example below shows how to calculate the hydrophobicity and ESP and save individual *.pdb files with the hydrophobicity and ESP values stored in the B-factor, as well as PyMol *.pml files to facilitate cavity visualization with the properties in PyMol.
 ```
 from CageCavityCalc.CageCavityCalc import cavity
 
@@ -224,7 +225,7 @@ Once PyMol is installed, in PyMol the plugin is installed from: Plugin > Plugin 
 
 ## How it works
 
-CageCavityCalc uses a geometric algorithm based on an angle measurement technique.
+CageCavityCalc relies on a geometric algorithm that utilizes an angle measurement technique. The following image illustrates the key parameters involved in calculating the angle that defines cavity boundaries.
 
  <img src="CageCavityCalc/pic/principle.png" alt="Principle" width="40%" >
 
