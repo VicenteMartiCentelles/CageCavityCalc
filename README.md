@@ -109,11 +109,11 @@ print("Cavity_volume= ", volume, " A3")
 
 Cavity visulaization in PyMol using teh saved *.pml file.
 
-![Alt text](CageCavityCalc/pic/cavity.png "Cavity")
+<img src="CageCavityCalc/pic/cavity.png" alt="Cavity" width="50%" >
 
 Cavity visulaization with hydrophobicity in PyMol using teh saved *.pml file.
 
-![Alt text](CageCavityCalc/pic/hydrophobicity.png "Principle")
+<img src="CageCavityCalc/pic/hydrophobicity.png" alt="Cavity hydrophobicity" width="50%" >
 
 
 ### Example 2
