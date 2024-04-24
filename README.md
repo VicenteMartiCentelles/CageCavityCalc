@@ -9,7 +9,7 @@ Vicente Martí-Centelles Author ,Tomasz Krzysztof Piskorz ,Fernanda Duarte. Cage
 
 ## Quick installation:
 
-The installation of CageCavityCalc requires the following actions and commands:
+The installation of CageCavityCalc can be performed in Windows, Mac, or Linux. It only requires to:
 
 Download and install Miniconda3 (https://docs.conda.io/en/latest/miniconda.html)
 
