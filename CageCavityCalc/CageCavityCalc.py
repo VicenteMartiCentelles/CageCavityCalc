@@ -31,7 +31,7 @@ class cavity():
 
         self.grid_spacing = 1 # spacing between grid points
 
-        self.distance_threshold_for_90_deg_angle = 7
+        self.distance_threshold_for_90_deg_angle = 5
         calculate_bfactor = True
         compute_aromatic_contacts = False
         compute_hydrophobicity = True
