@@ -1,4 +1,12 @@
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+<!-- CSS media queries for different screen sizes -->
+<style>
+  @media only screen and (max-width: 600px) {
+    img {
+      width: 100%;
+    }
+  }
+</style>
 
 # CageCavityCalc
 CageCavityCalc is a Python-based tool for calculating the cavity size of molecular cages. 
@@ -109,10 +117,9 @@ cav.print_to_pymol(cage_name+"_cavity_esp.pml", "esp")
 print("Cavity_volume= ", volume, " A3")
 ```
 
-
 Cavity visulaization in PyMol using teh saved *.pml file.
 
-<img src="CageCavityCalc/pic/cavity.png" alt="Cavity" width="50%" >
+<img src="CageCavityCalc/pic/cavity.png" alt="Cavity" width="70%" >
 
 Cavity visulaization with hydrophobicity in PyMol using teh saved *.pml file.
 
@@ -120,8 +127,7 @@ Cavity visulaization with hydrophobicity in PyMol using teh saved *.pml file.
 
 
 ### Example 2
-
-It can be used to read a cage class from cgbind that enables the cage construction from a ligand smile structure, a metal, and the cage topology:
+Read a cage class from cgbind that enables the cage construction from a ligand smile structure, a metal, and the cage topology:
 
 ```
 from CageCavityCalc.CageCavityCalc import cavity
@@ -137,7 +143,7 @@ cav.print_to_file("cage_cavity.pdb")
 ```
 
 ### Example 3
-It can also be used for reading MDAnalysis universe files:
+Read MDAnalysis universe files and calculate the volume for all frames of the trajectory:
  
 ```
 from CageCavityCalc.CageCavityCalc import cavity
@@ -156,12 +162,11 @@ print(volume)
 ```
 
 ### Example 4
-The obtained cavity volumes in all the structures of the trajectory can be saved using the following script. The number of atoms is kept constant by setting additional grid points is in existing grid point, or in case when there is no cavity it is set to (0,0,0), when necessary.
+Read MDAnalysis universe files and calculate the volume for all frames of the trajectory. The obtained cavity volumes in all the structures of the trajectory can be saved using the following script. The number of atoms is kept constant by setting additional grid points is in existing grid point, or in case when there is no cavity it is set to (0,0,0), when necessary.
 
 ```
 from CageCavityCalc.CageCavityCalc import cavity
 import MDAnalysis
-
 
 syst = MDAnalysis.Universe("short.gro", "short.xtc")
 volume = []
@@ -211,16 +216,15 @@ export CAV_LOG_LEVEL=INFO
 ```
 
 
+## Detailed installation instructions:
 
-## Detailed nstallation instructions:
+The software CageCavityCalc (C3) is compatible with Linux, Windows, and Mac. The installation of C3 requires the following steps. 
 
-The installation of C3 requires the following steps. The software is compatible with Linux, Windows, and Mac.
-
-First it is required to install Miniconda3 (Python 3.7 or later,), that can be obtained from https://docs.conda.io/en/latest/miniconda.html. Then in the “Anaconda Prompt”, the command line version of C3 is installed using pip: “pip install CageCavityCalc”, this will install the required dependencies.
+First it is required to install Miniconda3 (Python 3.7 or later), that can be obtained from https://docs.conda.io/en/latest/miniconda.html. Then in the “Anaconda Prompt”, the command line version of C3 is installed using pip: “pip install CageCavityCalc”, this will install the required dependencies.
 
 For performing ESP and hydrophobicity calculation, C3 requires OpenBabel that can be installed using “conda install -c conda-forge openbabel” (or “conda config --add channels conda-forge” followed by “conda install openbabel”). For file loading in multiple formats, including files for molecular dynamics cavity analysis, requires installing MDAnalysis using “conda install -c conda-forge mdanalysis” (or “conda config --add channels conda-forge” followed by “conda install mdanalysis”). 
 
-As with any program, to run CageCavityCalc from the command line it is needed to either add its installation folder to the system path or to execute the CageCavityCalc.py file directly from the folder.
+As with any program, to run CageCavityCalc from the command line it is needed to either add its installation folder to the system path or to execute the CageCavityCalc.py file directly from the folder. For example, in Windows the user needs to add the folder “C:\Users\UserName\miniconda3\Lib\site-packages\CageCavityCalc\” to the Python path navigating through the following menus: My Computer > Properties > Advanced System Settings > Environment Variables > PYTHONPATH.
 
 To install the C3 PyMol plugin, the open-source version of PyMol must be installed in the “Anaconda Prompt” the command using “conda install -c conda-forge pymol-open-source” for Windows, Mac, and Linux. Alternatively, it can be installed from https://www.cgohlke.com/ for Windows. It is also required to install the following dependencies: “pip install pyqt5 qtpy” (in some cases it may require uninstall pyqt5 with “pip uninstall pyqt5” followed by “pip install pyqt5 qtpy”). For Spanish computers, for running the plugin it is required to change the regional settings of the computer to use points as a decimal separator instead of commas.
 Once PyMol is installed, in PyMol the plugin is installed from: Plugin > Plugin Manager > Install New Plugin. Choose “Install from local file” and locate the __init__.py file in the pymol_plugin folder of C3 typically located in C:\Users\UserName\miniconda3\Lib\site-packages\CageCavityCalc\pymol_plugin. To use the plugin, the user just needs to open a cage in PyMol, then go to Plugin and click on CageCavityCalc to run the plugin.  Then, the computed cavity is displayed in PyMol. The user can select the computed property to display by just clicking on the right panel of the generated cavity objects.
