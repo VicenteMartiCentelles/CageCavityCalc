@@ -2,7 +2,15 @@
 <!-- CSS media queries for different screen sizes -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="github-markdown.css">
-<style>  @media only screen and (max-width: 600px) {   img { width: 100%;  }  } </style>
+<style>  
+ .markdown-body {
+		box-sizing: border-box;
+		min-width: 200px;
+		max-width: 980px;
+		margin: 0 auto;
+		padding: 45px;
+	}
+ @media only screen and (max-width: 600px) {   img { width: 100%;  }  } </style>
 
 # CageCavityCalc
 CageCavityCalc is a Python-based tool for calculating the cavity size of molecular cages. 
