@@ -43,7 +43,7 @@ CageCavityCalc can be used from the PyMol plugin, throught the command line, fro
  The PyMol plugin is integrated into the software through a user interface allowing the selection of the different parameters for the cavity calculation. First, the user needs to initiate PyMol by typing “pymol” in the Anaconda Prompt. Then, in the PyMol interface the user needs to load the desired cage file using File > Open and select the “cage.pdb” file. Then, to initiate the C3 plugin, the user needs access to Plugin > CageCavityCalc. Once all the options are selected, the user needs to click on “Calculate volume” to initiate the calculation of the cavity and all the selected properties. Once the computation is finished, the computed cavity and the cavity with the properties are displayed in PyMol. The PyMol plugin enables the storage of all computed properties in the same PyMol session file, allowing the user to select which one to display and to save PDB files of each property. To save the session file, the user needs to access to File > Save Session As. The user can select the computed property to display by just clicking on the right panel of the generated cavity objects (see Figure 9 in the manuscript). To obtain a good quality image of the cage and the cavity, the user needs to type “ray” in the PyMol command line, then the obtained image can be saved by using File > Export Image As > PNG. 
 
 <p align="center">
-<img src="CageCavityCalc/pic/C3_PyMol_Plugin.png" alt="C3_PyMol_Plugin" width="100%" >
+<img src="CageCavityCalc/pic/C3_PyMol_Plugin.png" alt="C3_PyMol_Plugin" >
 </p>
 
 ### Command line
