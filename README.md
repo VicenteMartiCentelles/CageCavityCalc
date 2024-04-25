@@ -1,5 +1,7 @@
 
 <!-- CSS media queries for different screen sizes -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="github-markdown.css">
 <style>  @media only screen and (max-width: 600px) {   img { width: 100%;  }  } </style>
 
 # CageCavityCalc
