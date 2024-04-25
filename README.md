@@ -1,6 +1,6 @@
 
 # CageCavityCalc
-CageCavityCalc is a Python-based tool for calculating the cavity size of molecular cages. 
+CageCavityCalc is a Python-based tool for calculating the cavity size of molecular cages available for Windows, MAC, and Linux. CageCavityCalc is designed for the rapid calculation of cavity sizes for a wide range of molecular structures and porous systems. CageCavityCalc has a PyMol plugin making very easy to compute and visualize the cavity through an automated graphical user interface. Additionally, CageCavityCalc can also be used by the command line and as a Python module. In addition to computing the cavity size, the hydrophobic and electrostatic potentials of the cavity are computed, providing insights into potential host-guest interactions.
 
 ## Citation
 If you find CageCavityCalc useful in your research please consider citing the paper: 
@@ -112,7 +112,7 @@ cav.print_to_pymol(cage_name+"_cavity_esp.pml", "esp")
 print("Cavity_volume= ", volume, " A3")
 ```
 
-Cavity visulaization in PyMol using teh saved *.pml file.
+Cavity visulaization in PyMol using the saved *.pml file.
 <p align="center">
 <img src="CageCavityCalc/pic/cavity.png" alt="Cavity" width="70%" >
 </p>
@@ -122,7 +122,7 @@ Cavity visulaization with hydrophobicity in PyMol using teh saved *.pml file.
 </p>
 
 ### Example 2
-Read a cage class from cgbind that enables the cage construction from a ligand smile structure, a metal, and the cage topology:
+Read a cage class from Cgbind that enables the cage construction from a ligand smile structure, a metal, and the cage topology:
 
 ```
 from CageCavityCalc.CageCavityCalc import cavity
