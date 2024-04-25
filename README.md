@@ -4,7 +4,7 @@ CageCavityCalc is a Python-based tool for calculating the cavity size of molecul
 
 ## Citation
 If you find CageCavityCalc useful in your research please consider citing the paper: 
-Vicente Martí-Centelles Author ,Tomasz Krzysztof Piskorz ,Fernanda Duarte. CageCavityCalc (C3): A computational tool for calculating and visualizing cavities in Molecular Cages. ChemRxiv, 2024, https://doi.org/10.26434/chemrxiv-2024-fmlx0
+Vicente Martí-Centelles, Tomasz Krzysztof Piskorz, Fernanda Duarte. CageCavityCalc (C3): A computational tool for calculating and visualizing cavities in Molecular Cages. ChemRxiv, 2024, https://doi.org/10.26434/chemrxiv-2024-fmlx0
 
 <p align="center">
  <img src="CageCavityCalc/pic/graphical_abstract_CageCavityCalc.png" alt="Graphical Abstract CageCavityCalc" width="70%" >
@@ -44,7 +44,7 @@ CageCavityCalc can be used from the PyMol plugin, throught the command line, fro
 <img src="CageCavityCalc/pic/C3_PyMol_Plugin.png" alt="C3_PyMol_Plugin" >
 </p>
 <!-- CSS media queries for different screen sizes -->
-<style>  @media only screen and (max-width: 600px) {   img { width: 100%;  }  } </style>
+<style>  @media only screen  {   img { width: 100%;  }  } </style>
 </div>
 
 ### Command line
