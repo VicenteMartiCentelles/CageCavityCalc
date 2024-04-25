@@ -1,3 +1,5 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
 # CageCavityCalc
 CageCavityCalc is a Python-based tool for calculating the cavity size of molecular cages. 
 
@@ -5,7 +7,7 @@ CageCavityCalc is a Python-based tool for calculating the cavity size of molecul
 If you find CageCavityCalc useful in your research please consider citing the paper: 
 Vicente Martí-Centelles Author ,Tomasz Krzysztof Piskorz ,Fernanda Duarte. CageCavityCalc (C3): A computational tool for calculating and visualizing cavities in Molecular Cages. ChemRxiv, 2024, https://doi.org/10.26434/chemrxiv-2024-fmlx0
 
- <img src="CageCavityCalc/pic/graphical_abstract_CageCavityCalc.png" alt="Graphical Abstract CageCavityCalc" width="50%" >
+ <img src="CageCavityCalc/pic/graphical_abstract_CageCavityCalc.png" alt="Graphical Abstract CageCavityCalc" width="70%" >
 
 ## Quick installation:
 
@@ -114,7 +116,7 @@ Cavity visulaization in PyMol using teh saved *.pml file.
 
 Cavity visulaization with hydrophobicity in PyMol using teh saved *.pml file.
 
-<img src="CageCavityCalc/pic/hydrophobicity.png" alt="Cavity hydrophobicity" width="50%" >
+<img src="CageCavityCalc/pic/hydrophobicity.png" alt="Cavity hydrophobicity" width="70%" >
 
 
 ### Example 2
@@ -227,7 +229,7 @@ Once PyMol is installed, in PyMol the plugin is installed from: Plugin > Plugin 
 
 CageCavityCalc relies on a geometric algorithm that utilizes an angle measurement technique. The following image illustrates the key parameters involved in calculating the angle that defines cavity boundaries.
 
- <img src="CageCavityCalc/pic/principle.png" alt="Principle" width="40%" >
+ <img src="CageCavityCalc/pic/principle.png" alt="Principle" width="80%" >
 
 
 
