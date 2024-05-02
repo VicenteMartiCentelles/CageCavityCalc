@@ -513,7 +513,6 @@ class cavity():
             dummy_solvent_accessibility = []
 
             for atom_type in self.atom_type_list:
-
                 dist = self.KDTree_dict[atom_type].query(dummy_atom, k=self.n_atoms, p=2,
                                                     distance_upper_bound=self.distThreshold_atom_contacts)
                 '''
@@ -571,7 +570,7 @@ class cavity():
         return self.hydrophobicity
 
     def calculate_esp(self, metal_name=None, metal_charge=None, method='eem', max_memory=1e9):
-        factor = (8.987551787e9)*(1.602176634e-19)*(1e10) #(Coulomb constant)*(elementary charge)/ Angstrom
+        factor = (8.987551792e9)*(1.602176634e-19)*(1e10) #(Coulomb constant)*(elementary charge)/ Angstrom
 
         partial_charges = calculate_partial_charges(self.positions, self.atom_names, method=method, metal_name=metal_name, metal_charge=metal_charge)
 
@@ -590,4 +589,5 @@ class cavity():
 
         self.window_radius = get_max_escape_sphere(self.positions, self.atom_names)
         return self.window_radius
+
 
