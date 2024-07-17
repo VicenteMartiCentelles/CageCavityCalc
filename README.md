@@ -232,5 +232,10 @@ CageCavityCalc relies on a geometric algorithm that utilizes an angle measuremen
  <img src="CageCavityCalc/pic/principle.png" alt="Principle" width="80%" >
 </p>
 
+## Troubleshooting
+The software may give some errors associated to particular cage structures, by either the format or the properties of the atoms/groups of the structure.
 
+Error in 'GetSubscrutMatches' (AttributeError: 'NoneType' object has no attribute 'GetSubscrutMatches'): this error is associated when the plugin does not find the type of chemical group in the hydrophobicity dictionary. The user is advised to repeat the calculation disabling hydrophobicity, aromatic contacts, SASA, and ESP. In this way only the cavity size is calculated, and the lack of hydrophobicity error is avoided, and the volume of the cavity is calculated.
+
+Error in 'read_positions_and_atom_names_from_array" (AttributeError: 'NoneType' object has no attribute 'group'): this error is associated when reading atom names and not finding the atom name in the Van der Waals radii dictionary. We found this type of error in some instances when exporting directly a PDB file from a CIF file with crystallographic software such as Mercury. The user is advised to convert the cage file to XYZ format using OpenBabel (https://github.com/openbabel/openbabel/releases). Then reinitialize PyMol, load the XYZ file and repeat the calculation.
 
