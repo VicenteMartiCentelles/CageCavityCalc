@@ -239,3 +239,12 @@ Error in 'GetSubscrutMatches' (AttributeError: 'NoneType' object has no attribut
 
 Error in 'read_positions_and_atom_names_from_array" (AttributeError: 'NoneType' object has no attribute 'group'): this error is associated when reading atom names and not finding the atom name in the Van der Waals radii dictionary. We found this type of error in some instances when exporting directly a PDB file from a CIF file with crystallographic software such as Mercury. The user is advised to convert the cage file to XYZ format using OpenBabel (https://github.com/openbabel/openbabel/releases). Then reinitialize PyMol, load the XYZ file and repeat the calculation.
 
+Error in loading the Qt platform "qt.qpa.plugin: Could not load the Qt platform plugin "windows" in "" even though it was found. This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem." This error may happen and it can be solved by forcing the reinstall of pyqt5 as follows:
+pip install --force-reinstall pyqt5
+pip install --force-reinstall qtpy
+
+Error with the PyMol plugin with regional settings that use a "," to separate decimals:
+File "C:\Users\user\Documents\pymol\lib\site-packages\pmg_tk\startup\pymol_plugin\__init__.py", line 89, in run
+    grid_size = float(form.grid_edit.text())
+ValueError: could not convert string to float: '1,0'
+This error is fixed by changing the regional settings of the operating sistems to use a "." to separate decimals.
