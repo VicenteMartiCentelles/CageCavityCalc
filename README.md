@@ -248,3 +248,5 @@ File "C:\Users\user\Documents\pymol\lib\site-packages\pmg_tk\startup\pymol_plugi
     grid_size = float(form.grid_edit.text())
 ValueError: could not convert string to float: '1,0'
 This error is fixed by changing the regional settings of the operating sistems to use a "." to separate decimals.
+
+Error "ValueError: data must be of shape (n, m), where there are n points of dimension m" is typical when CageCavityCalc is not able to determine the cavity (i.e. cavity volume = 0 A^3). To solve this error it is recommended to reduce the grid size to run again the cavity calculation to cheit if CageCavityCalc is able to determine the cavity. 
