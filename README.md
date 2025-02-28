@@ -4,7 +4,8 @@ CageCavityCalc is a Python-based tool for calculating the cavity size of molecul
 
 ## Citation
 If you find CageCavityCalc useful in your research please consider citing the paper: 
-Vicente Martí-Centelles, Tomasz Krzysztof Piskorz, Fernanda Duarte. CageCavityCalc (C3): A computational tool for calculating and visualizing cavities in Molecular Cages. ChemRxiv, 2024, https://doi.org/10.26434/chemrxiv-2024-fmlx0
+Vicente Martí-Centelles, Tomasz Krzysztof Piskorz, Fernanda Duarte. CageCavityCalc (C3): A computational tool for calculating and visualizing cavities in Molecular Cages. J. Chem. Inf. Model. 2024,
+https://doi.org/10.1021/acs.jcim.4c00355
 
 <p align="center">
  <img src="CageCavityCalc/pic/graphical_abstract_CageCavityCalc.png" alt="Graphical Abstract CageCavityCalc" width="80%" >
@@ -231,5 +232,21 @@ CageCavityCalc relies on a geometric algorithm that utilizes an angle measuremen
  <img src="CageCavityCalc/pic/principle.png" alt="Principle" width="80%" >
 </p>
 
+## Troubleshooting
+The software may give some errors associated to particular cage structures, by either the format or the properties of the atoms/groups of the structure.
 
+Error in 'GetSubscrutMatches' (AttributeError: 'NoneType' object has no attribute 'GetSubscrutMatches'): this error is associated when the plugin does not find the type of chemical group in the hydrophobicity dictionary. The user is advised to repeat the calculation disabling hydrophobicity, aromatic contacts, SASA, and ESP. In this way only the cavity size is calculated, and the lack of hydrophobicity error is avoided, and the volume of the cavity is calculated.
 
+Error in 'read_positions_and_atom_names_from_array" (AttributeError: 'NoneType' object has no attribute 'group'): this error is associated when reading atom names and not finding the atom name in the Van der Waals radii dictionary. We found this type of error in some instances when exporting directly a PDB file from a CIF file with crystallographic software such as Mercury. The user is advised to convert the cage file to XYZ format using OpenBabel (https://github.com/openbabel/openbabel/releases). Then reinitialize PyMol, load the XYZ file and repeat the calculation.
+
+Error in loading the Qt platform "qt.qpa.plugin: Could not load the Qt platform plugin "windows" in "" even though it was found. This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem." This error may happen and it can be solved by forcing the reinstall of pyqt5 as follows:
+pip install --force-reinstall pyqt5
+pip install --force-reinstall qtpy
+
+Error with the PyMol plugin with regional settings that use a "," to separate decimals:
+File "C:\Users\user\Documents\pymol\lib\site-packages\pmg_tk\startup\pymol_plugin\__init__.py", line 89, in run
+    grid_size = float(form.grid_edit.text())
+ValueError: could not convert string to float: '1,0'
+This error is fixed by changing the regional settings of the operating sistems to use a "." to separate decimals.
+
+Error "ValueError: data must be of shape (n, m), where there are n points of dimension m" is typical when CageCavityCalc is not able to determine the cavity (i.e. cavity volume = 0 A^3). To solve this error it is recommended to reduce the grid size to run again the cavity calculation to cheit if CageCavityCalc is able to determine the cavity. 
