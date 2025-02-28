@@ -86,7 +86,7 @@ def make_dialog():
         #    cmd.ray(width, height, quiet=0)
         #    print('No filename selected, only rendering on display')
         selection = form.selection_name.currentText()
-        grid_size = float(form.grid_edit.text())
+        grid_size = float(form.grid_edit.text().replace(",", "."))
         hydro = form.hydro_check.isChecked()
         aro = form.aro_check.isChecked()
         sas = form.sas_check.isChecked()
@@ -106,9 +106,9 @@ def make_dialog():
             cluster_text = "false"
         
         dist_90_a = form.dist_90_auto.isChecked()
-        dist_90_a_v = float(form.dist_90_auto_value.text()) 
+        dist_90_a_v = float(form.dist_90_auto_value.text().replace(",", ".")) 
         dist_90_m = form.dist_90_manual.isChecked()
-        dist_90_m_v = float(form.dist_90_manual_value.text())
+        dist_90_m_v = float(form.dist_90_manual_value.text().replace(",", "."))
 
         #form.calculate_volume.setText("Calculating... it might take a while (~1 min)")
         
