@@ -1,1 +1,6 @@
-An automated windows installer is available.
+An automated windows installer is available to download from https://github.com/VicenteMartiCentelles/CageCavityCalc/releases/tag/v.1.0.5.WinInstaller
+
+Automated Windows 64-bit (Windows 10 and Windows 11) installer for CageCavityCalc 1.0.5, PyMOL 3.1.0, and WinPython64.
+The CageCavityCalc plugin will be installed into PyMOL.
+A shortcut to CageCavityCalc-PyMOL will also be placed on the desktop for easy access.
+This version is recommended for users working in a Windows environment.
