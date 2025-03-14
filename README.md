@@ -1,9 +1,14 @@
 
 # CageCavityCalc
-CageCavityCalc is a Python-based tool for calculating the cavity size of molecular cages available for Windows, MAC, and Linux. CageCavityCalc is designed for the rapid calculation of cavity sizes for a wide range of molecular structures and porous systems. CageCavityCalc has a PyMol plugin making very easy to compute and visualize the cavity through an automated graphical user interface. Additionally, CageCavityCalc can also be used by the command line and as a Python module. In addition to computing the cavity size, the hydrophobic and electrostatic potentials of the cavity are computed, providing insights into potential host-guest interactions.
+CageCavityCalc is a Python-based tool for calculating the cavity size of molecular cages available for Windows, MAC, and Linux. CageCavityCalc is designed for the rapid calculation of cavity sizes for a wide range of molecular structures and porous systems. 
+
+CageCavityCalc has a PyMol plugin making very easy to compute and visualize the cavity through an automated graphical user interface. Additionally, CageCavityCalc can also be used by the command line and as a Python module. 
+
+In addition to computing the cavity size, the hydrophobic and electrostatic potentials of the cavity are computed, providing insights into potential host-guest interactions.
 
 ## Citation
-If you find CageCavityCalc useful in your research please consider citing the paper: 
+If you find CageCavityCalc useful in your research please consider citing the paper:
+
 Vicente Martí-Centelles, Tomasz Krzysztof Piskorz, Fernanda Duarte. CageCavityCalc (*C*3): A computational tool for calculating and visualizing cavities in Molecular Cages. *J. Chem. Inf. Model.* **2024**, *64* (14), 5604–5616.
 https://doi.org/10.1021/acs.jcim.4c00355
 
@@ -15,8 +20,11 @@ https://doi.org/10.1021/acs.jcim.4c00355
 
 ### Automated Windows 64-bit (Windows 10 and Windows 11) CageCavityCalc 1.0.5 Installer
 Download CageCavityCalc 1.0.5 Windows Installer https://github.com/VicenteMartiCentelles/CageCavityCalc/releases/download/v.1.0.5.WinInstaller/CageCavityCalc_1.0.5_Win64_Installer.exe
+
 This version is recommended for users working in a Windows environment, as the installer will install CageCavityCalc 1.0.5, PyMOL 3.1.0 (with the CageCavityCalc plugin), and WinPython64.
+
 A shortcut to CageCavityCalc-PyMOL will also be placed on the desktop for easy access. 
+
 Further information and step by step installation instructions of the CageCavityCalc 1.0.5 Windows Installer is available on https://github.com/VicenteMartiCentelles/CageCavityCalc/releases/tag/v.1.0.5.WinInstaller
 
 ### Command line installation
