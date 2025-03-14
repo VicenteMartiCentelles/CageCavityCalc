@@ -1,5 +1,5 @@
 
-Download CageCavityCalc 1.0.5 Windows Installer
+CageCavityCalc 1.0.5 Windows Installer
  ==================================
  
 An automated windows installer is available to download.
@@ -12,7 +12,7 @@ The CageCavityCalc plugin will be installed into PyMOL.
 A shortcut to CageCavityCalc-PyMOL will also be placed on the desktop for easy access.
 This version is recommended for users working in a Windows environment.
 
-Further information of the CageCavityCalc 1.0.5 Windows Installer is available on https://github.com/VicenteMartiCentelles/CageCavityCalc/releases/tag/v.1.0.5.WinInstaller
+Further information and step by step installation instruction of the CageCavityCalc 1.0.5 Windows Installer is available on https://github.com/VicenteMartiCentelles/CageCavityCalc/releases/tag/v.1.0.5.WinInstaller
 
 ```
  Open-Source PyMOL Copyright Notice
