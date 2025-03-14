@@ -1,9 +1,10 @@
 
-###Download CageCavityCalc 1.0.5 Windows Installer
+Download CageCavityCalc 1.0.5 Windows Installer
+ ==================================
+ 
+An automated windows installer is available to download.
 
-An automated windows installer is available to download from https://github.com/VicenteMartiCentelles/CageCavityCalc/releases/tag/v.1.0.5.WinInstaller
-
-[Download CageCavityCalc 1.0.5 Windows Installer](https://github.com/VicenteMartiCentelles/CageCavityCalc/releases/tag/v.1.0.5.WinInstaller)
+Download CageCavityCalc 1.0.5 Windows Installer https://github.com/VicenteMartiCentelles/CageCavityCalc/releases/download/v.1.0.5.WinInstaller/CageCavityCalc_1.0.5_Win64_Installer.exe
 
 
 Automated Windows 64-bit (Windows 10 and Windows 11) installer for CageCavityCalc 1.0.5, PyMOL 3.1.0, and WinPython64.
@@ -11,6 +12,9 @@ The CageCavityCalc plugin will be installed into PyMOL.
 A shortcut to CageCavityCalc-PyMOL will also be placed on the desktop for easy access.
 This version is recommended for users working in a Windows environment.
 
+Further information of the CageCavityCalc 1.0.5 Windows Installer is available on https://github.com/VicenteMartiCentelles/CageCavityCalc/releases/tag/v.1.0.5.WinInstaller
+
+```
  Open-Source PyMOL Copyright Notice
  ==================================
 
@@ -59,3 +63,4 @@ This version is recommended for users working in a Windows environment.
 
  All other endorsements employing the PyMOL trademark require specific,
  written prior permission.
+ 
