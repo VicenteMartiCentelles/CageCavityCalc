@@ -22,6 +22,7 @@ from CageCavityCalc.electrostatics import calculate_partial_charges
 from CageCavityCalc.input_output import read_positions_and_atom_names_from_file, read_positions_and_atom_names_from_array, print_to_file, read_cgbind, read_mdanalysis, print_pymol_file, convert_to_mol2
 from CageCavityCalc.window_size import get_max_escape_sphere
 from CageCavityCalc.log import logger
+from CageCavityCalc.windows_size_ellipsoid import dbscan_clustering_windows, save_ellipsoids_as_pdb
 
 class cavity():
     def __init__(self):
@@ -57,6 +58,8 @@ class cavity():
 
         self.dummy_atoms_positions = []
         self.dummy_atoms_temperature = None
+        
+        self.dummy_atoms_windows_positions = []
 
         #self.hydrophobicity = hydrophobicity
 
@@ -269,6 +272,8 @@ class cavity():
                     if i.overlapping_with_cage == 0:
                         if averageSummAngles_deg > 90:
                             i.inside_cavity = 1
+                        if averageSummAngles_deg > 85 and averageSummAngles_deg < 95:
+                            i.is_window = 1
 
         # Create a KDThree of the cavity dummy atoms
         calculatedGirdContacts = []
@@ -380,6 +385,10 @@ class cavity():
         #print("Saving MOL file with the dummy cavity atoms")
         #rdkit.MolToMolFile(rdkit_molRW, cageMOLout1)
         '''
+        #Save the window dummy atoms        
+        for i in calculatedGird.grid:
+            if i.is_window == 1:
+                self.dummy_atoms_windows_positions.append(i.pos)
 
     def sum_up_volume(self):
         logger.info("Summing the volume")
@@ -442,6 +451,22 @@ class cavity():
             positions = np.vstack([self.positions, self.dummy_atoms_positions])
 
             atom_names = np.append(self.atom_names, np.array(['D']*len(self.dummy_atoms_positions)))
+            print_to_file(filename, positions, atom_names, property_values)
+
+    def print_windows_to_file(self, filename, property_name = None):
+        logger.info("Printing windows to file")
+
+        assert self.n_atoms > 0, "no atoms"
+
+        if len(self.dummy_atoms_windows_positions)==0:
+            logger.info("No cavity, saving just the input!")
+            print_to_file(filename, self.positions, self.atom_names)
+        else:
+            property_values = self.get_property_values(property_name)
+
+            positions = np.vstack([self.positions, self.dummy_atoms_windows_positions])
+
+            atom_names = np.append(self.atom_names, np.array(['D']*len(self.dummy_atoms_windows_positions)))
             print_to_file(filename, positions, atom_names, property_values)
 
 
@@ -590,4 +615,7 @@ class cavity():
         self.window_radius = get_max_escape_sphere(self.positions, self.atom_names)
         return self.window_radius
 
+    def windows_ellipsoid_calculation(self):
+        self.all_fitted_ellipsoids = dbscan_clustering_windows(self.dummy_atoms_windows_positions, self.positions, self.atom_names)
+        save_ellipsoids_as_pdb(self.all_fitted_ellipsoids, self.positions, self.atom_names, filename="ellipsoids_dbscan_output.pdb")
 
