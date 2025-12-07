@@ -617,5 +617,8 @@ class cavity():
 
     def windows_ellipsoid_calculation(self):
         self.all_fitted_ellipsoids = dbscan_clustering_windows(self.dummy_atoms_windows_positions, self.positions, self.atom_names)
+        print("FDSFS, ", self.all_fitted_ellipsoids)
         save_ellipsoids_as_pdb(self.all_fitted_ellipsoids, self.positions, self.atom_names, filename="ellipsoids_dbscan_output.pdb")
+        print("FDSFS2, ", self.all_fitted_ellipsoids)
+        return self.all_fitted_ellipsoids
 

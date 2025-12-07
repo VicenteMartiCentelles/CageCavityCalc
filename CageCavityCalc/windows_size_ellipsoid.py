@@ -72,10 +72,10 @@ def dbscan_clustering_windows(data_points, cage_atoms, atom_names):
 
 
     # --- Ellipsoid Fitting and Plotting ---
-
+    
     # Prepare the 3D plot
-    fig = plt.figure(figsize=(12, 10))
-    ax = fig.add_subplot(111, projection='3d')
+    #fig = plt.figure(figsize=(12, 10))
+    #ax = fig.add_subplot(111, projection='3d')
 
     unique_labels = set(cluster_labels)
     colors = plt.cm.get_cmap('tab20', len(unique_labels)) # Use a distinct colormap
@@ -134,6 +134,7 @@ def dbscan_clustering_windows(data_points, cage_atoms, atom_names):
                 'color': color_for_label
             })
 
+    '''
     # --- Plotting the Ellipsoids ---
     for ellipsoid_data in all_fitted_ellipsoids:
         center = ellipsoid_data['center']
@@ -194,7 +195,7 @@ def dbscan_clustering_windows(data_points, cage_atoms, atom_names):
     ax.set_zlabel('Z Coordinate')
     ax.legend(loc='lower left', bbox_to_anchor=(-0.1, 0.1)) # Adjust legend position for better visibility
     plt.tight_layout()
-    plt.show()
+    plt.show()'''
     
     return all_fitted_ellipsoids
 

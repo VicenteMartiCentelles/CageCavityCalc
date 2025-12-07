@@ -18,5 +18,7 @@ cav.print_windows_to_file("cage_windows.pdb")
 #cav.print_to_pymol("cage_cavity.pml")
 print("Cavity_volume= ", volume, " A3")
 
-cav.windows_ellipsoid_calculation()
-
+windows_ellipsoid = cav.windows_ellipsoid_calculation()
+print("Fitted windows ellipsoids: ")
+print(windows_ellipsoid)
+print("Finished!")
