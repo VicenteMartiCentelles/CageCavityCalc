@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: CageCavityCalc
+Version: 1.0.5
+License-File: LICENSE
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: scikit-learn
+Requires-Dist: rdkit
+Dynamic: license-file
