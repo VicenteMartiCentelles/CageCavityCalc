@@ -32,28 +32,45 @@ The installation of CageCavityCalc can be performed in Windows, Mac, or Linux. I
 
 Download and install Miniconda3 (https://docs.conda.io/en/latest/miniconda.html)
 
-Open the “Anaconda Prompt” and execute the following commands:
+Open the “Anaconda Prompt” (Windows) or a Terminal (Mac/Linux) and execute the following commands:
 
 ```
+conda create -n Cavity python=3.12
+conda activate Cavity
+conda install pip
 pip install CageCavityCalc
 conda install -c conda-forge pymol-open-source
 pip uninstall pyqt5
 pip install pyqt5 qtpy
 conda install -c conda-forge openbabel
-conda install -c conda-forge mdanalysis
+pip install MDAnalysis
 pymol
-
-Then, install the PyMol the plugin: Plugin > Plugin Manager > Install New Plugin.
-Choose “Install from local file” and locate the __init__.py file in the pymol_plugin folder of C3
-(typically located in C:\Users\UserName\miniconda3\Lib\site-packages\CageCavityCalc\pymol_plugin).
 ```
 
+Python 3.10 to 3.13 can be used (tested on macOS). Older versions (3.9 and earlier) and Python 3.14 are not supported by all dependencies (e.g. PyMOL).
+
+Then, install the PyMol plugin: Plugin > Plugin Manager > Install New Plugin.
+Choose “Install from local file” and locate the __init__.py file in the pymol_plugin folder of C3.
+To find this folder on any operating system, run the following command (with the Cavity environment activated):
+```
+python -c "import CageCavityCalc, os; print(os.path.join(os.path.dirname(CageCavityCalc.__file__), 'pymol_plugin'))"
+```
+
+If the openbabel installation is unsuccessful, or you obtain errors regarding openbabel, you can install openbabel instead using:
+```
+pip install openbabel-wheel
+```
+
+You can check the installation using:
+```
+python -c "import openbabel; print(openbabel.__version__)"
+```
 
 ## Quick start
 CageCavityCalc can be used from the PyMol plugin, throught the command line, and from a Python file by loading the CageCavityCalc module. 
 
 ### PyMol plugin
- The PyMol plugin is integrated into the software through a user interface allowing the selection of the different parameters for the cavity calculation. First, the user needs to initiate PyMol by typing “pymol” in the Anaconda Prompt. Then, in the PyMol interface the user needs to load the desired cage file using File > Open and select the “cage.pdb” file. Then, to initiate the C3 plugin, the user needs access to Plugin > CageCavityCalc. Once all the options are selected, the user needs to click on “Calculate volume” to initiate the calculation of the cavity and all the selected properties. Once the computation is finished, the computed cavity and the cavity with the properties are displayed in PyMol. The PyMol plugin enables the storage of all computed properties in the same PyMol session file, allowing the user to select which one to display and to save PDB files of each property. To save the session file, the user needs to access to File > Save Session As. The user can select the computed property to display by just clicking on the right panel of the generated cavity objects (see Figure 9 in the manuscript). To obtain a good quality image of the cage and the cavity, the user needs to type “ray” in the PyMol command line, then the obtained image can be saved by using File > Export Image As > PNG. 
+ The PyMol plugin is integrated into the software through a user interface allowing the selection of the different parameters for the cavity calculation. First, the user needs to initiate PyMol by typing “pymol” in the Anaconda Prompt (Windows) or a Terminal (Mac/Linux). Then, in the PyMol interface the user needs to load the desired cage file using File > Open and select the “cage.pdb” file. Then, to initiate the C3 plugin, the user needs access to Plugin > CageCavityCalc. Once all the options are selected, the user needs to click on “Calculate volume” to initiate the calculation of the cavity and all the selected properties. Once the computation is finished, the computed cavity and the cavity with the properties are displayed in PyMol. The PyMol plugin enables the storage of all computed properties in the same PyMol session file, allowing the user to select which one to display and to save PDB files of each property. To save the session file, the user needs to access to File > Save Session As. The user can select the computed property to display by just clicking on the right panel of the generated cavity objects (see Figure 9 in the manuscript). To obtain a good quality image of the cage and the cavity, the user needs to type “ray” in the PyMol command line, then the obtained image can be saved by using File > Export Image As > PNG. 
 
 <p align="center">
 <img src="CageCavityCalc/pic/C3_PyMol_Plugin.png" alt="C3_PyMol_Plugin" >
@@ -63,8 +80,8 @@ CageCavityCalc can be used from the PyMol plugin, throught the command line, and
 For example, to use C3 from the command line the user needs to executee in the console the following commands: $python CageCavityCalc.py -f cage.pdb -o cage_cavity.pdb -gr 1.5. This order will load the cage.pdb file containing the cage chemical structure and the cavity of the cage will be calculated using a grid spacing of 1.5 Å. Additional arguments can be used as described in Table S1, allowing specifying the distance threshold used to calculate 90º angle, the use of the clustering algorithm to remove noisy cavity points that does not belogin to the main cavity, calculation of hydrophobicity specifying the method and distance function, calculation of hydrophobicity, save a PyMol pml file, or print additional information of the calculations in the terminal.
 
 Arguments that can be used int the C3 Python module though the command line.
-> -f	Input file (*pdb, *mol2, ...)\
-> -o	Output file (*pdb, *mol2, ...). If this argument is not used, the automatic generation of output filenames is performed.\
+> -f	Input file (*pdb, *mol2, *.xyz ...)\
+> -o	Output file (*pdb, *mol2, *.xyz ...). If this argument is not used, the automatic generation of output filenames is performed.\
 > -gr X	Grid spacing resolution (Angstroms). Default 1.0\
 > -d90a X	Automatic distance threshold to calculate 90 deg angle as X times window radius. Default 2.0. If the calculated threshold distance is smaller than 5 Å, it is set to 5 Å to ensure probe to find atoms to calculate the angle.\
 > -d90m X	Manual distance threshold to calculate 90 deg angle in Å\
@@ -81,7 +98,7 @@ Arguments that can be used int the C3 Python module though the command line.
 
 
 ### Python module
-To use C3 as in a Python script, it is required to load the module, followed by the initialization of the cavity, load the .pdb file of the cage, followed by the cavity volume calculation (using the default values of grid spacing resolution 1 Å and distance threshold for the 90-degree calculation of 5 Å) and saving the corresponding *.pdb file and PyMol *.pml file for cavity visualization in PyMol.
+To use C3 as in a Python script, it is required to load the module, followed by the initialization of the cavity, load the .pdb or .xyz file of the cage, followed by the cavity volume calculation (using the default values of grid spacing resolution 1 Å and distance threshold for the 90-degree calculation of 5 Å) and saving the corresponding *.pdb file and PyMol *.pml file for cavity visualization in PyMol.
 
 ```
 from CageCavityCalc.CageCavityCalc import cavity
@@ -93,6 +110,13 @@ cav.print_to_pymol("cage_cavity.pml")
 print("Cavity_volume= ", volume, " A3")
 ```
 
+To select the largest cavity, or reduce noise present around the desired cavity, the following setting can be included:
+
+`cav.clustering_to_remove_cavity_noise = 'size' # size, dist or false`
+
+Alternatively, the cavity closest to the center could be selected:
+
+`cav.clustering_to_remove_cavity_noise = 'dist'`
 
 ## Python module  additional examples
 CageCavityCalc, as a Python module, integrates well with more complex programs. We provide several examples showcasing its core functionalities and the types of analyses achievable.
@@ -218,6 +242,110 @@ FileTraj.close()
 
 ```
 
+## Example 5
+Cavity volumes can be calculated for every structure in a multi-frame file (such as a set of conformers or an MD trajectory) using ASE (`pip install ase`). Use `cav.clustering_to_remove_cavity_noise` to choose which cavity is measured: `'size'` selects the largest cavity, `'dist'` selects the cavity closest to the cage centre, and `'false'` (the default) disables clustering. The script writes the frame numbers and cavity volumes (Å³) to `volumes.txt`, saving each frame as soon as it is calculated, and plots the volume of each frame in `volume_plot.png` (requires `matplotlib`). This can be used, for example, to follow how the cavity size changes along a trajectory. In this example, `stationary.points.xyz` contains stationary points obtained with PATHSAMPLE (Prof. David Wales) for the pseudo-cubic metal-organic cage reported in [H. Xu et al., *Nat. Chem.* **2025**, 17, 289–296](https://doi.org/10.1038/s41557-024-01708-5).
+
+```
+from ase.io import read
+import matplotlib.pyplot as plt
+from CageCavityCalc.CageCavityCalc import cavity
+
+# Read all structures
+all_configs = read('stationary.points.xyz', index=':')
+print(f"Found {len(all_configs)} frames")
+
+distance_threshold_for_90_deg_angle = 2.0
+grid_spacing = 1.0
+
+frames = []
+volumes = []
+with open("volumes.txt", "w") as f:
+    f.write("Frame Volume_A3\n")
+    for i, atoms in enumerate(all_configs):
+        print(f"Processing frame {i+1}")
+
+        cav = cavity() #reinitialize every loop
+        cav.read_pos_name_array(atoms.positions, atoms.get_chemical_symbols())
+        cav.grid_spacing = float(grid_spacing)
+        cav.clustering_to_remove_cavity_noise = "size" #size, false, dist
+        window_radius = cav.calculate_window()
+        cav.distance_threshold_for_90_deg_angle = window_radius * distance_threshold_for_90_deg_angle
+        if cav.distance_threshold_for_90_deg_angle < 5:
+            cav.distance_threshold_for_90_deg_angle = 5
+        volume = cav.calculate_volume()
+        frames.append(i + 1)
+        volumes.append(volume)
+        f.write(f"{i + 1} {volume:.2f}\n")
+        f.flush()
+        print(f"Frame {i+1}: {volume:.2f} A3")  # progress indicator
+
+# Plot
+plt.figure(figsize=(10, 5))
+plt.plot(frames, volumes, marker='o', markersize=3, linewidth=1)
+plt.xlabel("Frame")
+plt.ylabel("Cavity Volume (Å³)")
+plt.title("Cavity Volume vs Frame")
+plt.tight_layout()
+plt.savefig("volume_plot.png", dpi=300)
+plt.show()
+```
+<img width="944" height="380" alt="Cavity volume along the PATHSAMPLE pathway, with the cavity shown in PyMOL at the first and last stationary points" src="https://github.com/user-attachments/assets/02bddabd-5d66-49c6-9bcd-83305ea56c8b" />
+
+## Example 6
+Building on Example 5, using the same `stationary.points.xyz`, the cavity can also be visualised along a trajectory or pathway in PyMOL. For each structure, the cavity is calculated and its dummy atoms (D) are replaced with He atoms so that ASE and PyMOL can read them. PyMOL needs the same number of atoms in every frame, so each frame is padded with extra He atoms (placed on an existing cavity point) up to the largest cavity in the set. The script saves the cavity trajectory to `cavity_traj.xyz`, which can be loaded in PyMOL.
+
+```
+import os
+import re
+from ase.io import read, write
+from ase import Atoms
+from CageCavityCalc.CageCavityCalc import cavity
+
+grid_spacing = 1.0
+distance_threshold_for_90_deg_angle = 2.0
+
+# Replace D dummy atoms with He atoms for compatibility with ASE
+def fix_dummy(filename_in, filename_out):
+    with open(filename_in) as f:
+        content = f.read()
+    content = re.sub(r'\bD\b', 'He', content)
+    with open(filename_out, "w") as f:
+        f.write(content)
+
+stationarypoints = read('stationary.points.xyz', index=":")
+
+cavity_frames = []
+for i, sp in enumerate(stationarypoints):
+    cav = cavity()
+    cav.read_pos_name_array(sp.positions, sp.get_chemical_symbols())
+    cav.grid_spacing = float(grid_spacing)
+    cav.clustering_to_remove_cavity_noise = "size" #size, false, dist
+    window_radius = cav.calculate_window()
+    cav.distance_threshold_for_90_deg_angle = window_radius * distance_threshold_for_90_deg_angle
+    if cav.distance_threshold_for_90_deg_angle < 5:
+        cav.distance_threshold_for_90_deg_angle = 5
+    cav.calculate_volume()
+    cav.print_to_file(f"cage_cavity_{i}.xyz")
+    fix_dummy(f"cage_cavity_{i}.xyz", f"cage_cavity_{i}_fixed.xyz")
+    cavity_frames.append(read(f"cage_cavity_{i}_fixed.xyz"))
+    os.remove(f"cage_cavity_{i}.xyz")
+    os.remove(f"cage_cavity_{i}_fixed.xyz")
+    print(f"Stationary point {i+1} done")
+
+atom_max = max(len(f) for f in cavity_frames)
+
+with open("cavity_traj.xyz", "w") as traj:
+    for frame in cavity_frames:
+        n_missing = atom_max - len(frame)
+        if n_missing > 0:
+            # Place padding atoms on one of this frame's own cavity points
+            he_atoms = [a for a in frame if a.symbol == "He"]
+            ref_pos = he_atoms[0].position if he_atoms else frame.get_center_of_mass()
+            pad = Atoms("He" * n_missing, positions=[ref_pos] * n_missing)
+            frame = frame + pad
+        write(traj, frame, format="xyz")
+```
+
 
 ### Other
 To make the calculation loud use CAV_LOG_LEVEL environmental variable
@@ -226,19 +354,18 @@ To make the calculation loud use CAV_LOG_LEVEL environmental variable
 export CAV_LOG_LEVEL=INFO
 ```
 
-
 ## Detailed installation instructions:
 
 The software CageCavityCalc (C3) is compatible with Linux, Windows, and Mac. The installation of C3 requires the following steps. 
 
-First it is required to install Miniconda3 (Python 3.7 or later), that can be obtained from https://docs.conda.io/en/latest/miniconda.html. Then in the “Anaconda Prompt”, the command line version of C3 is installed using pip: “pip install CageCavityCalc”, this will install the required dependencies.
+First it is required to install Miniconda3 and create a Python 3.10–3.13 environment (see Command line installation above). Miniconda3 can be obtained from https://docs.conda.io/en/latest/miniconda.html. Then, in the “Anaconda Prompt” (Windows) or a Terminal (Mac/Linux), the command line version of C3 is installed using pip: “pip install CageCavityCalc”, this will install the required dependencies.
 
-For performing ESP and hydrophobicity calculation, C3 requires OpenBabel that can be installed using “conda install -c conda-forge openbabel” (or “conda config --add channels conda-forge” followed by “conda install openbabel”). For file loading in multiple formats, including files for molecular dynamics cavity analysis, requires installing MDAnalysis using “conda install -c conda-forge mdanalysis” (or “conda config --add channels conda-forge” followed by “conda install mdanalysis”). 
+For performing ESP and hydrophobicity calculation, C3 requires OpenBabel that can be installed using “conda install -c conda-forge openbabel” (or “conda config --add channels conda-forge” followed by “conda install openbabel”). For file loading in multiple formats, including files for molecular dynamics cavity analysis, requires installing MDAnalysis using “pip install MDAnalysis” (fastest) or “conda install -c conda-forge mdanalysis”, which can be very slow with older conda versions. 
 
 As with any program, to run CageCavityCalc from the command line it is needed to either add its installation folder to the system path or to execute the CageCavityCalc.py file directly from the folder. For example, in Windows the user needs to add the folder “C:\Users\UserName\miniconda3\Lib\site-packages\CageCavityCalc\” to the Python path navigating through the following menus: My Computer > Properties > Advanced System Settings > Environment Variables > PYTHONPATH.
 
-To install the C3 PyMol plugin, the open-source version of PyMol must be installed in the “Anaconda Prompt” the command using “conda install -c conda-forge pymol-open-source” for Windows, Mac, and Linux. Alternatively, it can be installed from https://www.cgohlke.com/ for Windows. It is also required to install the following dependencies: “pip install pyqt5 qtpy” (in some cases it may require uninstall pyqt5 with “pip uninstall pyqt5” followed by “pip install pyqt5 qtpy”). For Spanish computers, for running the plugin it is required to change the regional settings of the computer to use points as a decimal separator instead of commas.
-Once PyMol is installed, in PyMol the plugin is installed from: Plugin > Plugin Manager > Install New Plugin. Choose “Install from local file” and locate the __init__.py file in the pymol_plugin folder of C3 typically located in C:\Users\UserName\miniconda3\Lib\site-packages\CageCavityCalc\pymol_plugin. To use the plugin, the user just needs to open a cage in PyMol, then go to Plugin and click on CageCavityCalc to run the plugin.  Then, the computed cavity is displayed in PyMol. The user can select the computed property to display by just clicking on the right panel of the generated cavity objects.
+To install the C3 PyMol plugin, the open-source version of PyMol must be installed in the “Anaconda Prompt” (Windows) or a Terminal (Mac/Linux) using the command “conda install -c conda-forge pymol-open-source” for Windows, Mac, and Linux. It is also required to install the following dependencies: “pip install pyqt5 qtpy” (in some cases it may require uninstall pyqt5 with “pip uninstall pyqt5” followed by “pip install pyqt5 qtpy”). For Spanish computers, for running the plugin it is required to change the regional settings of the computer to use points as a decimal separator instead of commas.
+Once PyMol is installed, in PyMol the plugin is installed from: Plugin > Plugin Manager > Install New Plugin. Choose “Install from local file” and locate the __init__.py file in the pymol_plugin folder of C3 (see Command line installation above for a command that finds this folder on any operating system). To use the plugin, the user just needs to open a cage in PyMol, then go to Plugin and click on CageCavityCalc to run the plugin.  Then, the computed cavity is displayed in PyMol. The user can select the computed property to display by just clicking on the right panel of the generated cavity objects.
 
 ## How it works
 
@@ -263,5 +390,8 @@ File "C:\Users\user\Documents\pymol\lib\site-packages\pmg_tk\startup\pymol_plugi
     grid_size = float(form.grid_edit.text())
 ValueError: could not convert string to float: '1,0'
 This error is fixed by changing the regional settings of the operating sistems to use a "." to separate decimals.
+On MacOS you can find them under:
+System Settings > Language & Region > Number format > 1,234,567.89
 
 Error "ValueError: data must be of shape (n, m), where there are n points of dimension m" is typical when CageCavityCalc is not able to determine the cavity (i.e. cavity volume = 0 A^3). To solve this error it is recommended to reduce the grid size to run again the cavity calculation to cheit if CageCavityCalc is able to determine the cavity. 
+
